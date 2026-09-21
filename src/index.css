@@ -1,0 +1,185 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  
+  --color-brand-orange: #F26A21;
+  --color-brand-orange-dark: #D95412;
+  --color-brand-purple: #8B5CF6;
+  --color-brand-purple-dark: #7C3AED;
+  --color-purple-tint: #F7F2FF;
+  --color-purple-badge: #EBE2FF;
+  --color-deep-ink: #101820;
+  --color-dark-surface: #161F26;
+  --color-warm-white: #FAFAF8;
+  --color-soft-surface: #F3F4F4;
+  --color-border-subtle: #E3E6E5;
+  --color-text-main: #202426;
+  --color-text-muted: #667085;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  body {
+    background-color: #FAFAF8;
+    color: #202426;
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Custom focus outline for keyboard accessibility */
+  *:focus-visible {
+    outline: 2px solid #F26A21;
+    outline-offset: 3px;
+  }
+}
+
+/* Responsive typography clamps */
+.font-serif-heading {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.heading-hero {
+  font-size: clamp(2.5rem, 5.5vw + 1rem, 5.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.heading-section {
+  font-size: clamp(2.125rem, 4vw + 0.5rem, 3.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.heading-subsection {
+  font-size: clamp(1.5rem, 2.5vw + 0.5rem, 2.25rem);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+
+.eyebrow-label {
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.125em;
+}
+
+/* Custom section & container padding */
+.section-padding {
+  padding-top: clamp(4rem, 8vw, 9.5rem);
+  padding-bottom: clamp(4rem, 8vw, 9.5rem);
+}
+
+.section-padding-sm {
+  padding-top: clamp(3rem, 5vw, 6rem);
+  padding-bottom: clamp(3rem, 5vw, 6rem);
+}
+
+.container-custom {
+  width: 100%;
+  max-width: 1340px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(1.25rem, 4vw, 3rem);
+  padding-right: clamp(1.25rem, 4vw, 3rem);
+}
+
+.container-narrow {
+  width: 100%;
+  max-width: 840px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(1.25rem, 4vw, 2.5rem);
+  padding-right: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* Smooth transitions */
+.transition-editorial {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Restrained scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #FAFAF8;
+}
+::-webkit-scrollbar-thumb {
+  background: #D9DCDA;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A0A5A8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Habit FAQ Scroller Animations & Utilities */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scroll-horizontal {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scroll-horizontal-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-scroll-horizontal {
+  animation: scroll-horizontal var(--scroll-duration, 40s) linear infinite;
+}
+
+.animate-scroll-horizontal-reverse {
+  animation: scroll-horizontal-reverse var(--scroll-duration, 40s) linear infinite;
+}
+
+.animate-scroll-horizontal:hover,
+.animate-scroll-horizontal-reverse:hover {
+  animation-play-state: paused;
+}
+
+.scroller-mask {
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
