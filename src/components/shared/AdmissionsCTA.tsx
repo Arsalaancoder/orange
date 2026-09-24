@@ -15,7 +15,7 @@ interface AdmissionsCTAProps {
 export const AdmissionsCTA: React.FC<AdmissionsCTAProps> = ({
   variant = 'dark',
   title = "Ready to Begin Your Healthcare Journey?",
-  subtitle = "Explore degree and diploma programs in Nursing and Paramedical Sciences across our Medipally, Keesara, and Nalgonda campuses.",
+  subtitle = "Explore degree and diploma programs in Nursing and Paramedical Sciences across our Chengicherla / Hyderabad, Nagaram / Hyderabad, and Nalgonda campuses.",
   className = ""
 }) => {
   const isDark = variant === 'dark';
@@ -79,7 +79,7 @@ export const AdmissionsCTA: React.FC<AdmissionsCTAProps> = ({
             <SecondaryButton
               to="/programs"
               size="lg"
-              className={isDark ? 'border-white text-white hover:bg-white hover:text-[#101820]' : ''}
+              className={isDark ? 'bg-white/10 border-white/30 text-white hover:bg-white hover:text-[#101820]' : ''}
               fullWidth={false}
             >
               Explore Programs

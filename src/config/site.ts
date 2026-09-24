@@ -31,15 +31,15 @@ export const siteConfig: SiteConfig = {
   name: "Orange Group of Nursing & Paramedical Colleges",
   shortName: "Orange Group",
   tagline: "Empowering Healthcare Professionals. Building a Healthier Future.",
-  motto: "Learn. Practice. Serve.",
+  motto: "",
   address: {
     line1: "H.No. 3-113/21/A",
-    village: "Chenigacherla (V)",
-    mandal: "Medipally (M)",
+    village: "Chengicherla",
+    mandal: "Chengicherla / Hyderabad",
     district: "Medchal Dist",
     state: "Telangana State",
     pincode: "500092",
-    fullText: "H.No. 3-113/21/A, Chenigacherla (V), Medipally (M), Medchal Dist, Telangana State - 500092"
+    fullText: "H.No. 3-113/21/A, Chengicherla, Hyderabad, Telangana State - 500092"
   },
   contact: {
     primaryPhone: "9346410605",
@@ -49,7 +49,7 @@ export const siteConfig: SiteConfig = {
     email: null // To be confirmed by client before launch
   },
   socialLinks: {
-    facebook: null,
+    facebook: "https://facebook.com",
     instagram: null,
     youtube: null,
     linkedin: null

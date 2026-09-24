@@ -16,8 +16,8 @@ export const ClinicalTrainingPage: React.FC = () => {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <ImagePlaceholder label="Clinical Training & Bedside Care" aspectRatio="16:9" />
-            <ImagePlaceholder label="Nursing Skills Laboratory Practice" aspectRatio="16:9" />
+            <ImagePlaceholder label="Clinical Training & Bedside Care" imageUrl="/images/facilities/facility-clinical-support.jpg" aspectRatio="16:9" />
+            <ImagePlaceholder label="Nursing Skills Laboratory Practice" imageUrl="/images/facilities/facility-nursing-skills.jpg" aspectRatio="16:9" />
           </div>
         </Container>
       </section>

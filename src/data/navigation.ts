@@ -13,13 +13,13 @@ export const mainNavigation: NavItem[] = [
     hasDropdown: true,
     dropdownItems: [
       { label: "All Colleges", href: "/colleges", description: "Browse all 8 nursing & paramedical institutions" },
-      { label: "Orange College of Nursing", href: "/colleges/orange-college-of-nursing", description: "Nursing College - Medipally" },
-      { label: "Orange School of Nursing", href: "/colleges/orange-school-of-nursing", description: "Nursing School - Medipally" },
-      { label: "Apple College of Nursing", href: "/colleges/apple-college-of-nursing", description: "Nursing College - Keesara / Nagaram" },
-      { label: "Apple School of Nursing", href: "/colleges/apple-school-of-nursing", description: "Nursing School - Keesara / Nagaram" },
-      { label: "Sindoora School of Nursing", href: "/colleges/sindoora-school-of-nursing", description: "Nursing School - Medipally" },
+      { label: "Orange College of Nursing", href: "/colleges/orange-college-of-nursing", description: "Nursing College - Chengicherla / Hyderabad" },
+      { label: "Orange School of Nursing", href: "/colleges/orange-school-of-nursing", description: "Nursing School - Chengicherla / Hyderabad" },
+      { label: "Apple College of Nursing", href: "/colleges/apple-college-of-nursing", description: "Nursing College - Nagaram / Hyderabad" },
+      { label: "Apple School of Nursing", href: "/colleges/apple-school-of-nursing", description: "Nursing School - Nagaram / Hyderabad" },
+      { label: "Sindoora School of Nursing", href: "/colleges/sindoora-school-of-nursing", description: "Nursing School - Chengicherla / Hyderabad" },
       { label: "Vennela School of Nursing", href: "/colleges/vennela-school-of-nursing", description: "Nursing School - Nalgonda" },
-      { label: "Jawan Paramedical College", href: "/colleges/jawan-paramedical-college", description: "Paramedical College - Keesara / Nagaram" },
+      { label: "Jawan Paramedical College", href: "/colleges/jawan-paramedical-college", description: "Paramedical College - Nagaram / Hyderabad" },
       { label: "Siddhartha Paramedical Colleges", href: "/colleges/siddhartha-paramedical-colleges", description: "Paramedical College - Nalgonda" },
     ]
   },
@@ -87,8 +87,8 @@ export const footerNavigation = {
     { label: "Privacy Policy", href: "/privacy-policy" }
   ],
   locations: [
-    { name: "Medipally Campus", address: "Chenigacherla, Medipally, Medchal District, Telangana" },
-    { name: "Keesara Campus", address: "Nagaram / Nagaram Panchayat, Keesara, Medchal District, Telangana" },
+    { name: "Chengicherla / Hyderabad Campus", address: "Chengicherla, Hyderabad, Telangana State - 500092" },
+    { name: "Nagaram / Hyderabad Campus", address: "Nagaram, Hyderabad, Telangana State - 500083" },
     { name: "Nalgonda Campus", address: "Hyderabad Road, Nalgonda, Telangana" }
   ]
 };

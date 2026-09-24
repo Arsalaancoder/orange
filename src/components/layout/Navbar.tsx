@@ -7,7 +7,7 @@ import { CollegesMegaMenu } from './CollegesMegaMenu';
 import { ProgramsMegaMenu } from './ProgramsMegaMenu';
 import { MoreDropdown } from './MoreDropdown';
 import { MobileMenu } from './MobileMenu';
-import { Menu, ChevronDown, MapPin, Sparkles } from 'lucide-react';
+import { Menu, ChevronDown, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { siteConfig } from '@/config/site';
 
@@ -101,18 +101,15 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
       >
         <div className="max-w-[1340px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#F26A21] text-white font-bold uppercase tracking-wider text-[10px]">
-              <Sparkles className="w-3 h-3" /> Motto
-            </span>
-            <span className="font-medium text-gray-300 tracking-wide">
-              "{siteConfig.motto}"
+            <span className="font-semibold text-white tracking-wide text-[11px] md:text-xs">
+              Orange Group of Nursing & Paramedical Colleges
             </span>
           </div>
 
           <div className="hidden sm:flex items-center gap-6 text-gray-300 text-[11px]">
             <span className="flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-[#F26A21]" />
-              Campuses: Medipally | Keesara | Nalgonda
+              Campuses: Chengicherla / Hyderabad | Nagaram / Hyderabad | Nalgonda
             </span>
             <span className="text-white/30">|</span>
             <span className="font-semibold text-white">
@@ -126,16 +123,16 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
       <div
         ref={navRef}
         className={cn(
-          'w-full transition-all duration-300 border-b relative',
+          'w-full transition-colors duration-300 border-b relative',
           isTransparent
             ? 'bg-transparent text-white border-white/15'
             : 'bg-white text-[#202426] border-[#E3E6E5] shadow-2xs',
-          scrolled ? 'py-3 h-[72px]' : 'py-4 md:py-5 h-[84px]'
+          scrolled ? 'py-2 h-[80px]' : 'py-3.5 md:py-4 h-[96px] lg:h-[108px]'
         )}
       >
         <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between gap-4 lg:gap-6 relative">
           {/* Logo Component */}
-          <Logo mode={isTransparent ? 'transparent' : 'solid'} />
+          <Logo mode={isTransparent ? 'transparent' : 'solid'} size={scrolled ? 'md' : 'lg'} />
 
           {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center space-x-0.5 xl:space-x-1.5" aria-label="Main Navigation">
@@ -158,31 +155,35 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
                     <button
                       onClick={() => toggleDropdown(item.label)}
                       className={cn(
-                        'px-2.5 xl:px-3 py-2 text-xs xl:text-sm font-bold rounded-lg inline-flex items-center gap-1 transition-all duration-200 cursor-pointer whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
+                        'relative px-2.5 xl:px-3 py-2 text-xs xl:text-sm font-bold rounded-lg inline-flex items-center gap-1 transition-all duration-200 cursor-pointer whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
                         isTransparent
-                          ? isActive
-                            ? 'text-[#F26A21] bg-white/10'
-                            : 'text-white hover:text-[#F26A21] hover:bg-white/10'
-                          : isActive
-                            ? 'text-[#F26A21] bg-[#F26A21]/5'
-                            : 'text-[#202426] hover:text-[#F26A21] hover:bg-[#F3F4F4]'
+                          ? isActive || isDropdownOpen
+                            ? 'text-[#F26A21]'
+                            : 'text-white hover:text-[#F26A21]'
+                          : isActive || isDropdownOpen
+                            ? 'text-[#F26A21]'
+                            : 'text-[#202426] hover:text-[#F26A21]'
                       )}
                       aria-expanded={isDropdownOpen}
                       aria-haspopup="true"
                     >
-                        <span>{item.label}</span>
-                        <ChevronDown
-                          className={cn(
-                            'w-3.5 h-3.5 transition-transform duration-200',
-                            isDropdownOpen && 'rotate-180 text-[#F26A21]'
-                          )}
-                        />
+                      <span>{item.label}</span>
+                      <ChevronDown
+                        className={cn(
+                          'w-3.5 h-3.5 transition-transform duration-200',
+                          isDropdownOpen && 'rotate-180 text-[#F26A21]'
+                        )}
+                      />
+                      {(isDropdownOpen || isActive) && (
+                        <span className="absolute -bottom-1 left-2.5 right-2.5 h-[2.5px] bg-[#F26A21] rounded-full transition-all" />
+                      )}
                     </button>
 
                     {isDropdownOpen && item.label === 'More' && (
                       <div
                         onMouseEnter={() => handleMouseEnter('More')}
                         onMouseLeave={handleMouseLeave}
+                        className="absolute top-full left-0 z-50"
                       >
                         <MoreDropdown onClose={() => setActiveDropdown(null)} />
                       </div>
@@ -196,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
                   key={item.href}
                   to={item.href}
                   className={cn(
-                    'px-2.5 xl:px-3 py-2 text-xs xl:text-sm font-bold rounded-lg transition-all duration-200 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
+                    'px-2.5 xl:px-3 py-2 text-xs xl:text-sm font-bold rounded-lg transition-colors duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
                     isTransparent
                       ? isActive
                         ? 'text-[#F26A21] bg-white/10'
@@ -236,12 +237,12 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
             </button>
           </div>
 
-          {/* Mega Menus anchored full width to main max-width container */}
+          {/* Mega Menus anchored absolutely to header container to prevent layout reflow/shaking */}
           {activeDropdown === 'Colleges' && (
             <div
               onMouseEnter={() => handleMouseEnter('Colleges')}
               onMouseLeave={handleMouseLeave}
-              className="w-full"
+              className="absolute inset-x-0 top-full z-50 px-4 sm:px-6 lg:px-8 pointer-events-auto"
             >
               <CollegesMegaMenu onClose={() => setActiveDropdown(null)} />
             </div>
@@ -250,7 +251,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
             <div
               onMouseEnter={() => handleMouseEnter('Programs')}
               onMouseLeave={handleMouseLeave}
-              className="w-full"
+              className="absolute inset-x-0 top-full z-50 px-4 sm:px-6 lg:px-8 pointer-events-auto"
             >
               <ProgramsMegaMenu onClose={() => setActiveDropdown(null)} />
             </div>

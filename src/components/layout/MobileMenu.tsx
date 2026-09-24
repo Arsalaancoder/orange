@@ -333,7 +333,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
               <div className="space-y-2 text-xs text-[#667085]">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
-                  <span>Campuses: Medipally | Keesara | Nalgonda</span>
+                  <span>Campuses: Chengicherla / Hyderabad | Nagaram / Hyderabad | Nalgonda</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />

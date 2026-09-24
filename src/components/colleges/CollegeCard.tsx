@@ -42,11 +42,11 @@ export const CollegeCard: React.FC<CollegeCardProps> = ({ college, className = '
             alt={college.name}
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
-          {/* Top Floating Badge */}
-          <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-            <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-white/95 text-[#202426] backdrop-blur-xs shadow-xs border border-white/20">
+          {/* Top Floating Badges */}
+          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+            <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-extrabold uppercase tracking-wider bg-white/95 text-[#202426] backdrop-blur-xs shadow-xs border border-white/20">
               {getBadgeLabel()}
             </span>
 
@@ -56,17 +56,15 @@ export const CollegeCard: React.FC<CollegeCardProps> = ({ college, className = '
               </span>
             )}
           </div>
-
-          {/* Location Overlay on Image */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-xs text-white/90 font-medium">
-            <MapPin className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
-            <span className="drop-shadow-xs">{college.locationGroup}</span>
-          </div>
         </div>
 
         {/* Content Details */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-3.5">
           <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-mono font-semibold text-[#667085]">
+              <MapPin className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
+              <span>{college.locationGroup} Campus</span>
+            </div>
             <h3 className="text-xl font-bold font-serif-heading text-[#202426] group-hover:text-[#F26A21] transition-colors leading-tight">
               <Link to={`/colleges/${college.slug}`} className="focus:outline-none hover:underline">
                 {college.name}

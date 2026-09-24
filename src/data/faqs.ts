@@ -10,7 +10,7 @@ export const faqsData: FAQItem[] = [
     id: "faq-1",
     category: "General",
     question: "What institutions comprise the Orange Group of Nursing & Paramedical Colleges?",
-    answer: "The group encompasses eight institutions located across Telangana (Chenigacherla/Medipally, Nagaram/Keesara, and Nalgonda), offering B.Sc Nursing, GNM, and specialized Paramedical diploma programs under respective registered educational societies."
+    answer: "The group encompasses eight institutions located across Telangana (Chengicherla/Hyderabad, Nagaram/Hyderabad, and Nalgonda), offering B.Sc Nursing, GNM, and specialized Paramedical diploma programs under respective registered educational societies."
   },
   {
     id: "faq-2",
@@ -34,7 +34,7 @@ export const faqsData: FAQItem[] = [
     id: "faq-5",
     category: "Admissions",
     question: "How can prospective students apply for admission?",
-    answer: "Students can submit an online enquiry through our website or visit any of our campus admission offices at Medipally, Keesara, or Nalgonda for application guidance and counseling."
+    answer: "Students can submit an online enquiry through our website or visit any of our campus admission offices at Chengicherla / Hyderabad, Nagaram / Hyderabad, or Nalgonda for application guidance and counseling."
   },
   {
     id: "faq-6",
@@ -71,7 +71,7 @@ export const scrollingAdmissionFaqData = {
         {
           id: "adm-4",
           question: "How do I apply for the 2026-2027 batch?",
-          answer: "Submit an online enquiry or visit our admissions offices in Medipally, Keesara/Nagaram, or Nalgonda."
+          answer: "Submit an online enquiry or visit our admissions offices in Chengicherla / Hyderabad, Nagaram / Hyderabad, or Nalgonda."
         },
         {
           id: "adm-5",
@@ -120,7 +120,7 @@ export const scrollingAdmissionFaqData = {
         {
           id: "cmp-1",
           question: "Where are the 8 college campuses located?",
-          answer: "Institutions are strategically located at Medipally (Chengicherla), Nagaram/Keesara, and Nalgonda."
+          answer: "Institutions are strategically located at Chengicherla / Hyderabad, Nagaram / Hyderabad, and Nalgonda."
         },
         {
           id: "cmp-2",

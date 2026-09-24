@@ -12,6 +12,7 @@ import { Reveal } from '@/components/animations/Reveal';
 import { StaggerContainer, StaggerItem } from '@/components/animations/Stagger';
 import { ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ProgramCareerCardsSection } from '@/components/programs/ProgramCareerCardsSection';
 
 export const ProgramsPage: React.FC = () => {
   const primaryPrograms = programsData.filter(p => p.isPrimary);
@@ -125,34 +126,39 @@ export const ProgramsPage: React.FC = () => {
                 {secondaryPrograms.map((program) => (
                   <div
                     key={program.id}
-                    className="p-6 rounded-2xl bg-white border border-[#E3E6E5] flex flex-col justify-between hover:border-[#D0D4D3] transition-all hover:shadow-xs group"
+                    className="p-6 rounded-3xl bg-white border border-[#E5E2DC] flex flex-col justify-between hover:border-[#F26A21]/40 transition-all hover:shadow-lg group relative overflow-hidden"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-[#F26A21] bg-[#F26A21]/10 px-2.5 py-1 rounded-md">
+                        <span className="text-xs font-mono font-extrabold text-[#F26A21] bg-[#FFF7F2] border border-[#FDE3D7] px-3 py-1 rounded-full shadow-2xs">
                           {program.code}
                         </span>
-                        <span className="text-[11px] font-bold text-[#667085] uppercase tracking-wider">
-                          Paramedical
-                        </span>
+                        
+                        {/* Top-Right Circular Action Button */}
+                        <Link
+                          to={`/programs/${program.slug}`}
+                          className="w-8 h-8 rounded-full bg-[#F3F4F4] text-[#202426] group-hover:bg-[#F26A21] group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-2xs"
+                          aria-label={`View details for ${program.fullTitle}`}
+                        >
+                          <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                        </Link>
                       </div>
 
-                      <h3 className="text-base font-bold text-[#202426] group-hover:text-[#F26A21] transition-colors leading-snug">
-                        {program.fullTitle}
+                      <h3 className="text-lg font-bold font-serif-heading text-[#1E293B] group-hover:text-[#F26A21] transition-colors leading-snug pt-1">
+                        <Link to={`/programs/${program.slug}`}>
+                          {program.fullTitle}
+                        </Link>
                       </h3>
 
-                      <p className="text-xs text-[#667085] leading-relaxed line-clamp-2">
+                      <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2 font-sans">
                         {program.overview}
                       </p>
                     </div>
 
-                    <div className="pt-5 mt-4 border-t border-[#E3E6E5] flex items-center justify-between">
-                      <Link
-                        to={`/programs/${program.slug}`}
-                        className="text-xs font-bold text-[#202426] hover:text-[#F26A21] transition-colors inline-flex items-center gap-1"
-                      >
-                        <span>View Details</span>
-                      </Link>
+                    <div className="pt-4 mt-5 border-t border-[#F1F3F4] flex items-center justify-between">
+                      <span className="text-[11px] font-mono bg-[#F4FBF7] text-[#16A34A] border border-[#E1F5EA] px-2.5 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                        {program.duration || '2 Years'}
+                      </span>
                       <Link
                         to={`/admissions?program=${program.slug}#enquiry`}
                         className="text-xs font-bold text-[#F26A21] hover:text-[#D95412] uppercase tracking-wider inline-flex items-center gap-1 group/btn"
@@ -167,6 +173,9 @@ export const ProgramsPage: React.FC = () => {
             </div>
         </Container>
       </section>
+
+      {/* 4. PROGRAM & CAREER OPPORTUNITY SECTION */}
+      <ProgramCareerCardsSection />
     </PageShell>
   );
 };

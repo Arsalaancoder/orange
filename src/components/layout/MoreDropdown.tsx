@@ -19,7 +19,7 @@ export const MoreDropdown: React.FC<MoreDropdownProps> = ({ onClose }) => {
   return (
     <div
       id="more-dropdown-menu"
-      className="absolute top-full left-0 w-80 z-50 pt-2 animate-in fade-in-50 slide-in-from-top-2 duration-200"
+      className="w-80 pt-2 animate-in fade-in-50 slide-in-from-top-2 duration-200 pointer-events-auto"
       role="region"
       aria-label="More Options Menu"
     >

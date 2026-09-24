@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { PageShell } from '@/components/layout/PageShell';
 import { Container } from '@/components/shared/Container';
 import { SectionHeading } from '@/components/shared/SectionHeading';
@@ -9,6 +10,16 @@ import { ImagePlaceholder } from '@/components/shared/ImagePlaceholder';
 import { CollegeCard } from '@/components/colleges/CollegeCard';
 import { SwissGradientCarousel } from '@/components/programs/SwissGradientCarousel';
 import { StaggerContainer, StaggerItem } from '@/components/animations/Stagger';
+import { Reveal } from '@/components/animations/Reveal';
+import {
+  headingSoftPopVariant,
+  cardSoftPopVariant,
+  featuredCardPopVariant,
+  staggerGridContainerVariant,
+  largeImageScaleRevealVariant,
+  fadeDownVariant,
+  DEFAULT_VIEWPORT,
+} from '@/components/animations/motionVariants';
 
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { FaqSection } from '@/components/ui/habit-faq-scroller';
@@ -24,7 +35,6 @@ import {
   Check, 
   UserCheck, 
   ArrowRight,
-  Play,
   Quote,
   Stethoscope,
   Activity,
@@ -44,17 +54,17 @@ export const HomePage: React.FC = () => {
   return (
     <PageShell
       title="Home"
-      description="Orange Group of Nursing & Paramedical Colleges. Empowering Healthcare Professionals. Building a Healthier Future. Offering B.Sc Nursing, GNM, and Paramedical Diplomas across Medipally, Keesara/Nagaram, and Nalgonda."
+      description="Orange Group of Nursing & Paramedical Colleges. Empowering Healthcare Professionals. Building a Healthier Future. Offering B.Sc Nursing, GNM, and Paramedical Diplomas across Chengicherla / Hyderabad, Nagaram / Hyderabad, and Nalgonda."
     >
-      {/* 1. HERO CAROUSEL (UNTOUCHED) */}
+      {/* 1. HERO CAROUSEL */}
       <HeroCarousel />
 
-      {/* 2. ABOUT OVERVIEW SECTION (SECTION 1 IN DESIGN: WHITE BACKGROUND + MEDIA WITH PLAY BUTTON OVERLAY) */}
+      {/* 2. ABOUT OVERVIEW SECTION */}
       <section className="section-padding bg-white border-b border-[#F0E8FF] relative overflow-hidden">
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             {/* Left Content Column */}
-            <div className="lg:col-span-6 space-y-6">
+            <Reveal variant="fadeUp" className="lg:col-span-6 space-y-6">
               <SectionHeading
                 eyebrow="ABOUT ORANGE GROUP"
                 title="Hear what leaders say about Healthcare Training."
@@ -102,10 +112,16 @@ export const HomePage: React.FC = () => {
                   View Our Services
                 </PrimaryButton>
               </div>
-            </div>
+            </Reveal>
 
-            {/* Right Media Frame with Play Button Overlay */}
-            <div className="lg:col-span-6">
+            {/* Right Media Frame */}
+            <motion.div
+              variants={largeImageScaleRevealVariant}
+              initial="hidden"
+              whileInView="visible"
+              viewport={DEFAULT_VIEWPORT}
+              className="lg:col-span-6"
+            >
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-purple-500/10 border border-[#E8D9FF] group">
                 <ImagePlaceholder
                   label="Nursing & Practical Training"
@@ -113,20 +129,15 @@ export const HomePage: React.FC = () => {
                   aspectRatio="4:3"
                   className="w-full h-full object-cover rounded-none border-0 transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent flex items-center justify-center">
-                  <div className="w-20 h-20 rounded-full bg-[#8B5CF6] text-white flex items-center justify-center shadow-2xl shadow-purple-900/50 hover:scale-110 active:scale-95 transition-transform duration-300 cursor-pointer">
-                    <Play className="w-8 h-8 fill-current translate-x-0.5 text-white" />
-                  </div>
-                </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </Container>
       </section>
 
-      {/* 3. CORE VALUES SECTION (SECTION 2 IN DESIGN: LIGHT LAVENDER BACKGROUND + 3 CARDS WITH HIGHLIGHTED MIDDLE PURPLE CARD) */}
+      {/* 3. CORE VALUES SECTION */}
       <section className="section-padding bg-[#F8F4FE] border-b border-[#F0E8FF] relative overflow-hidden">
-        {/* Subtle Decorative Sparkle Background in Top Right */}
+        {/* Subtle Decorative Sparkle Background */}
         <div className="absolute top-8 right-8 text-[#8B5CF6]/20 pointer-events-none z-0">
           <svg className="w-24 h-24" viewBox="0 0 100 100" fill="none">
             <path d="M50 0L54 46L100 50L54 54L50 100L46 54L0 50L46 46L50 0Z" fill="currentColor"/>
@@ -134,7 +145,13 @@ export const HomePage: React.FC = () => {
         </div>
 
         <Container className="relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
+          <motion.div
+            variants={headingSoftPopVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={DEFAULT_VIEWPORT}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
             <Eyebrow theme="purple" className="mb-4">
               OUR VALUES
             </Eyebrow>
@@ -146,12 +163,21 @@ export const HomePage: React.FC = () => {
                 </svg>
               </span>
             </h2>
-          </div>
+          </motion.div>
 
-          {/* 3-Column Grid Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+          {/* 3-Column Staggered Grid */}
+          <motion.div
+            variants={staggerGridContainerVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={DEFAULT_VIEWPORT}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch"
+          >
             {/* Card 1: White Card */}
-            <div className="bg-white rounded-3xl p-8 border border-[#E8D9FF] shadow-sm flex flex-col justify-between items-center text-center group hover:-translate-y-2 hover:shadow-xl transition-all duration-300">
+            <motion.div
+              variants={cardSoftPopVariant}
+              className="bg-white rounded-3xl p-8 border border-[#E8D9FF] shadow-sm flex flex-col justify-between items-center text-center group hover:-translate-y-2 hover:shadow-xl transition-all duration-300"
+            >
               <div className="space-y-5">
                 <div className="w-16 h-16 rounded-full bg-[#EBE2FF] text-[#7C3AED] flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
                   <Stethoscope className="w-8 h-8" />
@@ -167,10 +193,13 @@ export const HomePage: React.FC = () => {
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Card 2: VIBRANT PURPLE HIGHLIGHTED CARD (EXACT REPLICA OF MIDDLE CARD IN DESIGN) */}
-            <div className="bg-[#8B5CF6] text-white rounded-3xl p-8 shadow-2xl shadow-purple-500/25 flex flex-col justify-between items-center text-center transform md:-translate-y-2 group hover:-translate-y-3 transition-all duration-300">
+            {/* Card 2: VIBRANT PURPLE HIGHLIGHTED CARD WITH OVERSHOOT POP */}
+            <motion.div
+              variants={featuredCardPopVariant}
+              className="bg-[#8B5CF6] text-white rounded-3xl p-8 shadow-2xl shadow-purple-500/25 flex flex-col justify-between items-center text-center transform md:-translate-y-2 group hover:-translate-y-3 transition-all duration-300"
+            >
               <div className="space-y-5">
                 <div className="w-16 h-16 rounded-full bg-white/20 text-white flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
                   <Activity className="w-8 h-8 text-white" />
@@ -186,10 +215,13 @@ export const HomePage: React.FC = () => {
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
-            </div>
+            </motion.div>
 
             {/* Card 3: White Card */}
-            <div className="bg-white rounded-3xl p-8 border border-[#E8D9FF] shadow-sm flex flex-col justify-between items-center text-center group hover:-translate-y-2 hover:shadow-xl transition-all duration-300">
+            <motion.div
+              variants={cardSoftPopVariant}
+              className="bg-white rounded-3xl p-8 border border-[#E8D9FF] shadow-sm flex flex-col justify-between items-center text-center group hover:-translate-y-2 hover:shadow-xl transition-all duration-300"
+            >
               <div className="space-y-5">
                 <div className="w-16 h-16 rounded-full bg-[#EBE2FF] text-[#7C3AED] flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
                   <Award className="w-8 h-8" />
@@ -205,17 +237,17 @@ export const HomePage: React.FC = () => {
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </Container>
       </section>
 
-      {/* 4. MISSION & QUOTE SECTION (SECTION 3 IN DESIGN: WHITE BG + LEFT CONTENT + RIGHT QUOTE CARD & CHECKLIST) */}
+      {/* 4. MISSION & QUOTE SECTION */}
       <section className="section-padding bg-white border-b border-[#F0E8FF]">
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             {/* Left Content */}
-            <div className="lg:col-span-6 space-y-6">
+            <Reveal variant="fadeUp" className="lg:col-span-6 space-y-6">
               <SectionHeading
                 eyebrow="OUR MISSION"
                 title="Hear what leaders say about career Management."
@@ -232,10 +264,16 @@ export const HomePage: React.FC = () => {
                   Join Our Coaching
                 </PrimaryButton>
               </div>
-            </div>
+            </Reveal>
 
-            {/* Right Side: Quote Callout Box + Checklist (Exact Section 3 Layout) */}
-            <div className="lg:col-span-6 bg-[#F8F4FE] rounded-3xl p-8 md:p-10 border border-[#E8D9FF] shadow-xs space-y-6">
+            {/* Right Quote Callout Box */}
+            <motion.div
+              variants={cardSoftPopVariant}
+              initial="hidden"
+              whileInView="visible"
+              viewport={DEFAULT_VIEWPORT}
+              className="lg:col-span-6 bg-[#F8F4FE] rounded-3xl p-8 md:p-10 border border-[#E8D9FF] shadow-xs space-y-6"
+            >
               <div className="space-y-3">
                 <Quote className="w-10 h-10 text-[#8B5CF6]/40" />
                 <h3 className="text-xl md:text-2xl font-serif-heading font-bold text-[#1F192F] leading-snug">
@@ -280,12 +318,12 @@ export const HomePage: React.FC = () => {
                   <p className="text-xs text-[#667085]">Founder & Academic Chairman</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </Container>
       </section>
 
-      {/* 5. VISION & PROGRAM ACADEMICS EXPLORER (SECTION 4 IN DESIGN: SOFT LAVENDER BG + TALL MEDIA + RIGHT CONTENT) */}
+      {/* 5. VISION & PROGRAM ACADEMICS EXPLORER */}
       <section className="section-padding bg-[#F8F4FE] border-b border-[#F0E8FF] relative overflow-hidden">
         {/* Subtle Corner Sparkle Decor */}
         <div className="absolute top-6 right-6 text-[#8B5CF6]/20 pointer-events-none">
@@ -297,7 +335,13 @@ export const HomePage: React.FC = () => {
         <Container className="relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center mb-16">
             {/* Left Column: Tall Featured Image */}
-            <div className="lg:col-span-6">
+            <motion.div
+              variants={largeImageScaleRevealVariant}
+              initial="hidden"
+              whileInView="visible"
+              viewport={DEFAULT_VIEWPORT}
+              className="lg:col-span-6"
+            >
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-purple-500/10 border border-[#E8D9FF]">
                 <ImagePlaceholder
                   label="Healthcare Training Setup"
@@ -309,10 +353,10 @@ export const HomePage: React.FC = () => {
                   <span className="text-xs font-bold text-[#7C3AED]">State-of-the-Art Labs</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Right Content: Vision + Bullet List */}
-            <div className="lg:col-span-6 space-y-6">
+            {/* Right Content */}
+            <Reveal variant="fadeUp" className="lg:col-span-6 space-y-6">
               <SectionHeading
                 eyebrow="OUR VISION"
                 title="Hear what people are saying about career Management."
@@ -353,7 +397,7 @@ export const HomePage: React.FC = () => {
                   Join Our Coaching
                 </PrimaryButton>
               </div>
-            </div>
+            </Reveal>
           </div>
 
           {/* Academic Programs Filter Header */}
@@ -366,7 +410,13 @@ export const HomePage: React.FC = () => {
             />
 
             {/* Program Filter Buttons */}
-            <div className="flex items-center gap-2 p-1.5 bg-white rounded-2xl border border-[#E8D9FF] shrink-0 self-start md:self-auto shadow-sm">
+            <motion.div
+              variants={fadeDownVariant}
+              initial="hidden"
+              whileInView="visible"
+              viewport={DEFAULT_VIEWPORT}
+              className="flex items-center gap-2 p-1.5 bg-white rounded-2xl border border-[#E8D9FF] shrink-0 self-start md:self-auto shadow-sm"
+            >
               {(['All', 'Nursing', 'Paramedical'] as const).map((cat) => (
                 <button
                   key={cat}
@@ -380,11 +430,13 @@ export const HomePage: React.FC = () => {
                   {cat}
                 </button>
               ))}
-            </div>
+            </motion.div>
           </div>
 
           {/* Swiss Gradients Radial Arc Carousel */}
-          <SwissGradientCarousel programs={filteredPrograms} />
+          <Reveal variant="scaleUp">
+            <SwissGradientCarousel programs={filteredPrograms} />
+          </Reveal>
 
           <div className="mt-8 text-center">
             <SecondaryButton to="/programs" size="lg">
@@ -394,20 +446,20 @@ export const HomePage: React.FC = () => {
         </Container>
       </section>
 
-      {/* 6. OUR COLLEGES SECTION (WHITE BACKGROUND) */}
+      {/* 6. OUR COLLEGES SECTION */}
       <section className="section-padding bg-white border-b border-[#F0E8FF]">
         <Container>
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <Reveal variant="fadeUp" className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <SectionHeading
               eyebrow="OUR INSTITUTIONS"
               title="8 Colleges & Schools Across Telangana"
-              subtitle="Nursing colleges, nursing schools and paramedical colleges located in Medipally, Keesara/Nagaram and Nalgonda."
+              subtitle="Nursing colleges, nursing schools and paramedical colleges located in Chengicherla / Hyderabad, Nagaram / Hyderabad and Nalgonda."
               className="mb-0 max-w-2xl"
             />
             <SecondaryButton to="/colleges" className="shrink-0 self-start md:self-auto">
               Explore All Institutions
             </SecondaryButton>
-          </div>
+          </Reveal>
 
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredColleges.map((college, idx) => (
@@ -422,16 +474,25 @@ export const HomePage: React.FC = () => {
       {/* 7. WHY CHOOSE ORANGE GROUP (INSTITUTIONAL PILLARS) */}
       <section className="section-padding bg-[#F8F4FE] border-b border-[#F0E8FF]">
         <Container>
-          <SectionHeading
-            eyebrow="INSTITUTIONAL PILLARS"
-            title="Why Study at Orange Group?"
-            subtitle="Seven core educational commitments driving academic focus, practical training, and student support."
-          />
+          <Reveal variant="fadeUp">
+            <SectionHeading
+              eyebrow="INSTITUTIONAL PILLARS"
+              title="Why Study at Orange Group?"
+              subtitle="Seven core educational commitments driving academic focus, practical training, and student support."
+            />
+          </Reveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            variants={staggerGridContainerVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={DEFAULT_VIEWPORT}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
             {whyChooseUsData.map((pillar) => (
-              <div
+              <motion.div
                 key={pillar.id}
+                variants={cardSoftPopVariant}
                 className="group p-6 rounded-3xl bg-white border border-[#E8D9FF] flex flex-col justify-between transition-all duration-300 hover:border-[#8B5CF6] hover:-translate-y-1.5 hover:shadow-xl hover:shadow-purple-500/10"
               >
                 <div className="space-y-3">
@@ -445,25 +506,23 @@ export const HomePage: React.FC = () => {
                     {pillar.description}
                   </p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </Container>
       </section>
 
-
-
-
-
-      {/* 10. FAQ SCROLLER SECTION - COMMON ADMISSION & COURSE QUERIES */}
+      {/* 8. FAQ SCROLLER SECTION */}
       <section className="section-padding bg-[#F8F4FE] border-t border-[#F0E8FF] overflow-hidden">
         <Container>
-          <SectionHeading
-            eyebrow="FREQUENTLY ASKED QUESTIONS"
-            title="Common Admission & Course Queries"
-            subtitle="Find answers to common questions about our nursing and paramedical programs."
-            align="center"
-          />
+          <Reveal variant="fadeUp">
+            <SectionHeading
+              eyebrow="FREQUENTLY ASKED QUESTIONS"
+              title="Common Admission & Course Queries"
+              subtitle="Find answers to common questions about our nursing and paramedical programs."
+              align="center"
+            />
+          </Reveal>
 
           <div className="mt-8">
             <FaqSection data={scrollingAdmissionFaqData} />
@@ -473,5 +532,3 @@ export const HomePage: React.FC = () => {
     </PageShell>
   );
 };
-
-

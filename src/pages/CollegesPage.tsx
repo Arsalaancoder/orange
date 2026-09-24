@@ -18,8 +18,8 @@ import {
 
 const LOCATION_FILTERS: Array<{ id: string; label: string; group: LocationGroup | 'ALL' }> = [
   { id: 'all', label: 'ALL INSTITUTIONS', group: 'ALL' },
-  { id: 'medipally', label: 'MEDIPALLY', group: 'Medipally' },
-  { id: 'keesara', label: 'KEESARA / NAGARAM', group: 'Keesara / Nagaram' },
+  { id: 'chengicherla', label: 'CHENGICHERLA / HYDERABAD', group: 'Chengicherla / Hyderabad' },
+  { id: 'nagaram', label: 'NAGARAM / HYDERABAD', group: 'Nagaram / Hyderabad' },
   { id: 'nalgonda', label: 'NALGONDA', group: 'Nalgonda' }
 ];
 
@@ -42,7 +42,7 @@ export const CollegesPage: React.FC = () => {
     <PageShell>
       <SEO
         title="Our Institutions | Orange Group"
-        description="Orange Group brings together Nursing Colleges, Nursing Schools and Paramedical Colleges across Medipally, Keesara/Nagaram and Nalgonda."
+        description="Orange Group brings together Nursing Colleges, Nursing Schools and Paramedical Colleges across Chengicherla / Hyderabad, Nagaram / Hyderabad and Nalgonda."
       />
 
       {/* 1. EDITORIAL HERO SECTION */}
@@ -75,7 +75,7 @@ export const CollegesPage: React.FC = () => {
                 animate="visible"
                 className="text-lg md:text-xl text-[#485056] leading-relaxed max-w-2xl font-sans"
               >
-                Orange Group brings together Nursing Colleges, Nursing Schools and Paramedical Colleges operating across Medipally, Keesara/Nagaram and Nalgonda in Telangana.
+                Orange Group brings together Nursing Colleges, Nursing Schools and Paramedical Colleges operating across Chengicherla / Hyderabad, Nagaram / Hyderabad and Nalgonda in Telangana.
               </motion.p>
 
               {/* Stat Highlights */}
@@ -241,23 +241,23 @@ export const CollegesPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Panel 1: MEDIPALLY */}
+            {/* Panel 1: CHENGICHERLA / HYDERABAD */}
             <div className="bg-white p-8 rounded-2xl border border-[#E3E6E5] shadow-xs hover:border-[#F26A21]/40 transition-all flex flex-col justify-between space-y-6">
               <div className="space-y-4">
                 <div className="w-12 h-12 rounded-xl bg-[#F26A21]/10 text-[#F26A21] flex items-center justify-center">
                   <MapPin className="w-6 h-6" />
                 </div>
                 <h3 className="text-2xl font-serif-heading font-bold text-[#202426]">
-                  MEDIPALLY
+                  CHENGICHERLA / HYDERABAD
                 </h3>
                 <p className="text-xs text-[#667085] font-mono uppercase tracking-wider">
-                  Chenigacherla, Medchal District
+                  Chengicherla, Hyderabad
                 </p>
               </div>
 
               <div className="pt-4 border-t border-[#E3E6E5] space-y-3">
                 <span className="text-[11px] font-bold text-[#202426] uppercase tracking-wider block">
-                  Institutions in Medipally:
+                  Institutions in Chengicherla / Hyderabad:
                 </span>
                 <ul className="space-y-2.5 text-sm text-[#485056] font-medium">
                   <li className="flex items-center gap-2">
@@ -282,23 +282,23 @@ export const CollegesPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Panel 2: KEESARA / NAGARAM */}
+            {/* Panel 2: NAGARAM / HYDERABAD */}
             <div className="bg-white p-8 rounded-2xl border border-[#E3E6E5] shadow-xs hover:border-[#F26A21]/40 transition-all flex flex-col justify-between space-y-6">
               <div className="space-y-4">
                 <div className="w-12 h-12 rounded-xl bg-[#F26A21]/10 text-[#F26A21] flex items-center justify-center">
                   <MapPin className="w-6 h-6" />
                 </div>
                 <h3 className="text-2xl font-serif-heading font-bold text-[#202426]">
-                  KEESARA / NAGARAM
+                  NAGARAM / HYDERABAD
                 </h3>
                 <p className="text-xs text-[#667085] font-mono uppercase tracking-wider">
-                  Nagaram Panchayat, Medchal District
+                  Nagaram, Hyderabad
                 </p>
               </div>
 
               <div className="pt-4 border-t border-[#E3E6E5] space-y-3">
                 <span className="text-[11px] font-bold text-[#202426] uppercase tracking-wider block">
-                  Institutions in Keesara / Nagaram:
+                  Institutions in Nagaram / Hyderabad:
                 </span>
                 <ul className="space-y-2.5 text-sm text-[#485056] font-medium">
                   <li className="flex items-center gap-2">

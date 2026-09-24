@@ -28,7 +28,7 @@ const HERO_SLIDES: HeroSlide[] = [
     heading: (
       <>
         Empowering Healthcare Professionals.{' '}
-        <span className="block text-[#F26A21] mt-1 font-serif italic font-normal">
+        <span className="block text-[#FF8C38] mt-1 font-serif italic font-extrabold tracking-wide drop-shadow-sm">
           Building a Healthier Future.
         </span>
       </>
@@ -51,7 +51,7 @@ const HERO_SLIDES: HeroSlide[] = [
     heading: (
       <>
         Learn Through{' '}
-        <span className="text-[#F26A21] font-serif italic font-normal">
+        <span className="text-[#FF8C38] font-serif italic font-extrabold tracking-wide drop-shadow-sm">
           Hands-On Experience.
         </span>
       </>
@@ -72,7 +72,7 @@ const HERO_SLIDES: HeroSlide[] = [
     heading: (
       <>
         Knowledge. Skills.{' '}
-        <span className="text-[#F26A21] font-serif italic font-normal">
+        <span className="text-[#FF8C38] font-serif italic font-extrabold tracking-wide drop-shadow-sm">
           Compassion.
         </span>
       </>
@@ -141,9 +141,9 @@ export const HeroCarousel: React.FC = () => {
               <div className={cn('absolute inset-0 bg-gradient-to-br', currentSlide.imageBgClass)} />
             )}
 
-            {/* Premium Dark Gradient Readability Overlay */}
+            {/* Bright & Vivid Readability Overlay */}
             <div
-              className="absolute inset-0 bg-gradient-to-r from-[#101820]/95 via-[#101820]/80 to-[#101820]/35"
+              className="absolute inset-0 bg-gradient-to-r from-[#0B131B]/70 via-[#0B131B]/35 to-transparent"
               aria-hidden="true"
             />
           </motion.div>
@@ -178,16 +178,6 @@ export const HeroCarousel: React.FC = () => {
                 {currentSlide.supportingText}
               </p>
 
-              {/* Slide 1 Motto Phrase */}
-              {currentSlide.motto && (
-                <div className="inline-flex items-center gap-3 text-xs md:text-sm font-bold uppercase tracking-widest text-white bg-white/10 backdrop-blur-md px-4 py-2 rounded-lg border border-white/15">
-                  <span>LEARN.</span>
-                  <span className="text-[#F26A21]">•</span>
-                  <span>PRACTICE.</span>
-                  <span className="text-[#F26A21]">•</span>
-                  <span>SERVE.</span>
-                </div>
-              )}
 
               {/* CTA Buttons */}
               <div className="flex flex-wrap items-center gap-4 pt-2">

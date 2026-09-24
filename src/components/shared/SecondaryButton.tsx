@@ -47,8 +47,8 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
     <>
       <span className="tracking-wide">{children}</span>
       {showArrow && (
-        <span className={cn('rounded-full bg-[#E3E6E5] group-hover:bg-white/20 text-[#202426] group-hover:text-white flex items-center justify-center transition-all duration-300 shrink-0', circleSizes[size])}>
-          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+        <span className={cn('rounded-full bg-current/15 group-hover:bg-white/20 text-current group-hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 p-1', circleSizes[size])}>
+          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5 stroke-[2.5]" />
         </span>
       )}
     </>

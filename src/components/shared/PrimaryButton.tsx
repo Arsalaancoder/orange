@@ -47,8 +47,8 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     <>
       <span className="tracking-wide">{children}</span>
       {showArrow && (
-        <span className={cn('rounded-full bg-white/25 group-hover:bg-white text-white group-hover:text-[#D95412] flex items-center justify-center transition-all duration-300 shrink-0', circleSizes[size])}>
-          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+        <span className={cn('rounded-full bg-current/15 group-hover:bg-current text-current group-hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 p-1', circleSizes[size])}>
+          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5 stroke-[2.5]" />
         </span>
       )}
     </>

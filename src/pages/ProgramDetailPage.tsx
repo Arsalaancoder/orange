@@ -8,9 +8,10 @@ import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { ImagePlaceholder } from '@/components/shared/ImagePlaceholder';
 import { SectionHeading } from '@/components/shared/SectionHeading';
 import { ProgramCard } from '@/components/programs/ProgramCard';
+import { ProgramKeyStatsCards } from '@/components/programs/ProgramKeyStatsCards';
 import { programsData } from '@/data/programs';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import { Clock, GraduationCap, CheckCircle2, AlertCircle, BookOpen, HeartPulse, Building2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle, BookOpen, HeartPulse, Building2 } from 'lucide-react';
 import { Reveal } from '@/components/animations/Reveal';
 
 export const ProgramDetailPage: React.FC = () => {
@@ -106,48 +107,12 @@ export const ProgramDetailPage: React.FC = () => {
         </Container>
       </section>
 
-      {/* 2. QUICK FACTS STRIP */}
-      <section className="bg-white border-b border-[#E3E6E5] py-6">
+      {/* 2. PROGRAM KEY INFORMATION CARDS */}
+      <section className="bg-[#FAF9F5] border-b border-[#E3E6E5] py-10 md:py-14">
         <Container>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-left divide-y md:divide-y-0 md:divide-x divide-[#E3E6E5]">
-            <div className="space-y-1 md:pr-4">
-              <span className="text-[11px] font-bold text-[#667085] uppercase tracking-widest block">
-                DURATION
-              </span>
-              <span className="text-base md:text-lg font-bold text-[#202426] flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-[#F26A21]" />
-                {program.duration || "Contact Admissions"}
-              </span>
-            </div>
-
-            <div className="space-y-1 pt-4 md:pt-0 md:px-4">
-              <span className="text-[11px] font-bold text-[#667085] uppercase tracking-widest block">
-                ELIGIBILITY
-              </span>
-              <span className="text-base md:text-lg font-bold text-[#202426] flex items-center gap-1.5">
-                <GraduationCap className="w-4 h-4 text-[#F26A21]" />
-                {program.eligibility || "Contact Admissions"}
-              </span>
-            </div>
-
-            <div className="space-y-1 pt-4 md:pt-0 md:px-4">
-              <span className="text-[11px] font-bold text-[#667085] uppercase tracking-widest block">
-                CATEGORY
-              </span>
-              <span className="text-base md:text-lg font-bold text-[#202426]">
-                {program.category}
-              </span>
-            </div>
-
-            <div className="space-y-1 pt-4 md:pt-0 md:pl-4">
-              <span className="text-[11px] font-bold text-[#667085] uppercase tracking-widest block">
-                ACADEMIC LEVEL
-              </span>
-              <span className="text-base md:text-lg font-bold text-[#202426]">
-                {program.category === 'Nursing' && program.duration === '4 Years' ? 'Undergraduate Degree' : 'Professional Diploma'}
-              </span>
-            </div>
-          </div>
+          <Reveal variant="fadeUp">
+            <ProgramKeyStatsCards program={program} />
+          </Reveal>
         </Container>
       </section>
 
@@ -227,7 +192,7 @@ export const ProgramDetailPage: React.FC = () => {
                       Structured lectures in smart classrooms covering medical sciences and healthcare fundamentals.
                     </p>
                   </div>
-                  <ImagePlaceholder label="Classroom Instruction" aspectRatio="16:9" />
+                  <ImagePlaceholder label="Classroom Instruction" imageUrl="/images/facilities/facility-smart-classroom.jpg" aspectRatio="16:9" />
                 </div>
 
                 <div className="p-8 rounded-2xl bg-[#FAFAF8] border border-[#E3E6E5] space-y-4 flex flex-col justify-between">
@@ -240,7 +205,7 @@ export const ProgramDetailPage: React.FC = () => {
                       Hands-on practice in dedicated nursing skills laboratories and diagnostic testing facilities.
                     </p>
                   </div>
-                  <ImagePlaceholder label="Laboratory Skill Practice" aspectRatio="16:9" />
+                  <ImagePlaceholder label="Laboratory Skill Practice" imageUrl="/images/facilities/facility-nursing-skills.jpg" aspectRatio="16:9" />
                 </div>
 
                 <div className="p-8 rounded-2xl bg-[#FAFAF8] border border-[#E3E6E5] space-y-4 flex flex-col justify-between">
@@ -253,7 +218,7 @@ export const ProgramDetailPage: React.FC = () => {
                       Practical exposure in appropriate healthcare environments, subject to institutional arrangements.
                     </p>
                   </div>
-                  <ImagePlaceholder label="Clinical Exposure" aspectRatio="16:9" />
+                  <ImagePlaceholder label="Clinical Exposure" imageUrl="/images/facilities/facility-clinical-support.jpg" aspectRatio="16:9" />
                 </div>
               </div>
             </Container>

@@ -14,7 +14,7 @@ export const AdmissionsPage: React.FC = () => {
               <SectionHeading
                 eyebrow="Join Orange Group"
                 title="Building Healthcare Careers Through Clinical Mastery"
-                subtitle="Submit an admission enquiry or visit our campus admission offices at Medipally, Keesara, or Nalgonda for detailed counseling."
+                subtitle="Submit an admission enquiry or visit our campus admission offices at Chengicherla / Hyderabad, Nagaram / Hyderabad, or Nalgonda for detailed counseling."
               />
 
               <div className="p-6 rounded-2xl bg-[#FAFAF8] border border-[#E3E6E5] space-y-4">

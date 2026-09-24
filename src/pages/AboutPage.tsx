@@ -256,8 +256,8 @@ export const AboutPage: React.FC = () => {
             <div className="lg:col-span-6 space-y-6">
               <SectionHeading
                 eyebrow="OUR VISION"
-                title="Hear what people are saying about career Management."
-                subtitle="As a Business Coach, Mark not only understands the nuances necessary to navigate the hiring cycle but can help discover right path to a rewarding career or assistance in 'moving up' the ladder. His program is custom to the needs of each of his Career Coaching clients."
+                title="Pioneering Excellence in Nursing & Healthcare Education."
+                subtitle="Orange Group of Medical Colleges is committed to establishing benchmark educational institutions across Telangana, combining academic rigor, clinical simulation, and empathetic patient care."
                 className="mb-6"
               />
 
@@ -266,21 +266,21 @@ export const AboutPage: React.FC = () => {
                   <div className="w-6 h-6 rounded-full bg-[#8B5CF6] text-white flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-sm font-semibold text-[#1F192F]">We want to understand you.</span>
+                  <span className="text-sm font-semibold text-[#1F192F]">Empowering students with clinical confidence.</span>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-[#8B5CF6] text-white flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-sm font-semibold text-[#1F192F]">Positive Thoughts.</span>
+                  <span className="text-sm font-semibold text-[#1F192F]">State-of-the-art laboratory & hospital exposure.</span>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-[#8B5CF6] text-white flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-sm font-semibold text-[#1F192F]">Business Administration (BSC).</span>
+                  <span className="text-sm font-semibold text-[#1F192F]">Accredited Nursing & Paramedical Qualifications (B.Sc / GNM / DMLT).</span>
                 </div>
               </div>
 

@@ -48,12 +48,9 @@ export const Footer: React.FC = () => {
             <Logo mode="transparent" />
 
             <p className="text-sm text-gray-300 leading-relaxed max-w-sm">
-              "{siteConfig.tagline}"
+              Empowering Healthcare Professionals.{' '}
+              <span className="font-extrabold text-[#FF8C38]">Building a Healthier Future.</span>
             </p>
-
-            <div className="inline-block px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-[#F26A21] uppercase tracking-widest">
-              Motto: {siteConfig.motto}
-            </div>
           </div>
 
           {/* Programs Column (2 Cols) */}

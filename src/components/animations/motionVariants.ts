@@ -152,3 +152,17 @@ export const ctaSequenceChildVariant: Variants = {
     },
   },
 };
+
+// 9. Fade-Down Variant for Badges & Labels
+export const fadeDownVariant: Variants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: PREMIUM_EASING,
+    },
+  },
+};
+

@@ -5,43 +5,42 @@ import { cn } from '@/lib/utils';
 interface LogoProps {
   mode?: 'solid' | 'transparent';
   className?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export const Logo: React.FC<LogoProps> = ({ mode = 'solid', className }) => {
+export const Logo: React.FC<LogoProps> = ({ mode = 'solid', className, size = 'lg' }) => {
   const isTransparent = mode === 'transparent';
+
+  const sizeClasses = {
+    sm: 'h-10 sm:h-12',
+    md: 'h-12 sm:h-14 md:h-16',
+    lg: 'h-15 sm:h-18 md:h-20 lg:h-22',
+    xl: 'h-20 sm:h-24 md:h-28'
+  }[size];
 
   return (
     <Link
       to="/"
       className={cn(
-        'inline-flex items-center gap-3 group focus-visible:outline-none transition-all duration-300 shrink-0',
+        'inline-flex items-center group focus-visible:outline-none transition-all duration-300 shrink-0',
         className
       )}
-      aria-label="Orange Group of Nursing & Paramedical Colleges - Home"
+      aria-label="Orange College of Paramedical - Home"
     >
-      {/* Brand Icon Mark (Replaceable with SVG / Image later) */}
-      <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#F26A21] flex items-center justify-center text-white font-extrabold text-lg md:text-xl shadow-2xs group-hover:bg-[#D95412] transition-colors shrink-0">
-        O
-      </div>
-
-      {/* Text Brand Identity with refined proportions */}
-      <div className="flex flex-col text-left leading-tight">
-        <span
+      <div
+        className={cn(
+          'relative flex items-center shrink-0 p-0.5 transition-all duration-300',
+          isTransparent ? 'drop-shadow-[0_2px_10px_rgba(255,255,255,0.4)]' : 'bg-transparent'
+        )}
+      >
+        <img
+          src="/logo.png"
+          alt="Orange College of Paramedical Logo"
           className={cn(
-            'text-xs md:text-[13px] font-extrabold uppercase tracking-[0.16em] leading-none transition-colors duration-300',
-            isTransparent ? 'text-white' : 'text-[#F26A21]'
+            'w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]',
+            sizeClasses
           )}
-        >
-          ORANGE GROUP
-        </span>
-        <span
-          className={cn(
-            'text-[10px] md:text-[11px] font-semibold tracking-normal mt-0.5 whitespace-nowrap transition-colors duration-300',
-            isTransparent ? 'text-gray-300' : 'text-[#667085]'
-          )}
-        >
-          Nursing & Paramedical Colleges
-        </span>
+        />
       </div>
     </Link>
   );

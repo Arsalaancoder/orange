@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, AlertCircle, MessageSquare, Mail } from 'lucide-react';
 import { programsData } from '@/data/programs';
 import { collegesData } from '@/data/colleges';
+import { siteConfig } from '@/config/site';
 
 interface EnquiryFormProps {
   className?: string;
@@ -32,7 +33,7 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  // Automatically preselect program and college from URL search params (e.g., ?program=bsc-nursing or ?college=orange-college-of-nursing)
+  // Automatically preselect program and college from URL search params
   useEffect(() => {
     if (programQuery) {
       const matchedProg = programsData.find(
@@ -62,6 +63,22 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
     });
   };
 
+  const getWhatsAppUrl = () => {
+    const targetPhone = `91${siteConfig.contact.primaryPhone}`;
+    const lines = [
+      `*New Student Admission Enquiry - Orange Group* 🎓`,
+      ``,
+      `*Student Name:* ${formData.fullName}`,
+      `*Phone Number:* ${formData.phone}`,
+      formData.email ? `*Email:* ${formData.email}` : null,
+      `*Program of Interest:* ${formData.programOfInterest || 'Not Specified'}`,
+      `*Preferred College/Campus:* ${formData.preferredCollege || 'Not Specified'}`,
+      formData.message ? `*Student Notes/Questions:* ${formData.message}` : null,
+    ].filter(Boolean);
+
+    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(lines.join('\n'))}`;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName || !formData.phone) {
@@ -71,18 +88,51 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
 
     setError('');
     setSubmitted(true);
+
+    // Automatically trigger WhatsApp in new window
+    try {
+      const waUrl = getWhatsAppUrl();
+      window.open(waUrl, '_blank');
+    } catch (_) {
+      // Fallback handled by button on submitted screen
+    }
   };
 
   if (submitted) {
+    const waUrl = getWhatsAppUrl();
+
     return (
       <div className={`bg-white rounded-2xl p-8 border border-[#E3E6E5] text-center ${className}`}>
-        <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4">
-          <CheckCircle2 className="w-6 h-6" />
+        <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-200">
+          <CheckCircle2 className="w-7 h-7" />
         </div>
-        <h3 className="text-xl font-bold text-[#202426] mb-2">Enquiry Received</h3>
+        <h3 className="text-xl font-bold text-[#202426] mb-2">Enquiry Submitted!</h3>
         <p className="text-sm text-[#667085] leading-relaxed mb-6">
-          Thank you, <span className="font-semibold text-[#202426]">{formData.fullName}</span>. Our admissions counselors will reach out to you shortly at {formData.phone}.
+          Thank you, <span className="font-semibold text-[#202426]">{formData.fullName}</span>. Your enquiry details have been formatted for instant WhatsApp dispatch and college admissions processing.
         </p>
+
+        <div className="space-y-3 mb-6 max-w-md mx-auto">
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white px-6 py-3.5 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all w-full cursor-pointer"
+          >
+            <MessageSquare className="w-4 h-4 fill-current" />
+            <span>Send Details via WhatsApp Now</span>
+          </a>
+
+          <div className="p-3 bg-[#FAFAF8] rounded-xl border border-[#E3E6E5] text-left text-xs text-[#667085] space-y-1">
+            <div className="flex items-center gap-1.5 font-semibold text-[#202426]">
+              <Mail className="w-3.5 h-3.5 text-[#F26A21]" />
+              <span>College Email Integration Prepared</span>
+            </div>
+            <p className="text-[11px] text-[#A0A5A8]">
+              Details are formatted for instant delivery to the official college admissions inbox upon provision.
+            </p>
+          </div>
+        </div>
+
         <button
           onClick={() => {
             setSubmitted(false);
