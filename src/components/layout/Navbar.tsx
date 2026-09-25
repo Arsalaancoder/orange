@@ -92,23 +92,25 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white text-[#202426] border-b border-[#E3E6E5] shadow-sm transition-all duration-300">
-      {/* 1. TOP ANNOUNCEMENT BAR (Contains only Campuses and Admissions Helpline) */}
+      {/* 1. TOP ANNOUNCEMENT BAR */}
       <div
         className={cn(
-          'text-white text-[11px] md:text-xs py-2 px-4 transition-colors duration-300 border-b border-white/10',
+          'text-white text-[11px] md:text-xs py-2 px-4 transition-colors duration-300 border-b border-white/10 overflow-hidden',
           isTransparent ? 'bg-[#101820]/90 backdrop-blur-md' : 'bg-[#101820]'
         )}
       >
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-row items-center justify-between gap-2 whitespace-nowrap">
-          <div className="flex items-center gap-1.5 text-gray-300 text-[11px] md:text-xs">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-row items-center justify-between gap-2">
+          {/* Campus info — hidden on mobile to prevent overflow */}
+          <div className="hidden sm:flex items-center gap-1.5 text-gray-300 text-[11px] md:text-xs min-w-0">
             <MapPin className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
-            <span>Campuses: Chengicherla / Hyderabad | Nagaram / Hyderabad | Nalgonda</span>
+            <span className="truncate">Campuses: Chengicherla / Hyderabad | Nagaram / Hyderabad | Nalgonda</span>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[11px] md:text-xs">
+          {/* Helpline — always visible, whitespace-nowrap on itself only */}
+          <div className="flex items-center gap-1.5 text-[11px] md:text-xs ml-auto">
             <a
               href={`tel:${siteConfig.contact.primaryPhone}`}
-              className="flex items-center gap-1.5 font-semibold text-white hover:text-[#F26A21] transition-colors"
+              className="flex items-center gap-1.5 font-semibold text-white hover:text-[#F26A21] transition-colors whitespace-nowrap"
             >
               <PhoneCall className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
               <span>Admissions Helpline: {siteConfig.contact.primaryPhone}</span>

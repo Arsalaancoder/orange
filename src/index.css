@@ -3,7 +3,7 @@
 @theme {
   --font-sans: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Cormorant Garamond', Georgia, serif;
-  
+
   --color-brand-orange: #F26A21;
   --color-brand-orange-dark: #D95412;
   --color-brand-purple: #8B5CF6;
@@ -23,7 +23,7 @@
   :root {
     color-scheme: light;
   }
-  
+
   html {
     scroll-behavior: smooth;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -71,7 +71,8 @@
 }
 
 .eyebrow-label {
-  font-size: 0.8125rem; /* 13px */
+  font-size: 0.8125rem;
+  /* 13px */
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.125em;
@@ -115,13 +116,16 @@
 ::-webkit-scrollbar {
   width: 10px;
 }
+
 ::-webkit-scrollbar-track {
   background: #FAFAF8;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #D9DCDA;
   border-radius: 5px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #A0A5A8;
 }
@@ -141,6 +145,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -151,6 +156,7 @@
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -160,6 +166,7 @@
   0% {
     transform: translateX(-50%);
   }
+
   100% {
     transform: translateX(0);
   }
@@ -190,15 +197,15 @@
 }
 
 .marquee-track {
-  animation: marquee-scroll 30s linear infinite;
+  animation: marquee-scroll 32s linear infinite;
 }
 
-/* Pause on hover anywhere inside the ticker bar */
+/* Pause the ticker when the user hovers anywhere inside the bar */
 .admissions-ticker:hover .marquee-track {
   animation-play-state: paused;
 }
 
-/* Respect OS reduced-motion preference */
+/* Respect OS-level reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
   .marquee-track {
     animation: none;
