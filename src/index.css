@@ -183,3 +183,24 @@
   -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
 }
 
+/* ─── Admissions Ticker / Marquee ────────────────────────────────────────── */
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.3333%); }
+}
+
+.marquee-track {
+  animation: marquee-scroll 30s linear infinite;
+}
+
+/* Pause on hover anywhere inside the ticker bar */
+.admissions-ticker:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Respect OS reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}

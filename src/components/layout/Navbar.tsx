@@ -6,6 +6,7 @@ import { CollegesMegaMenu } from './CollegesMegaMenu';
 import { ProgramsMegaMenu } from './ProgramsMegaMenu';
 import { MoreDropdown } from './MoreDropdown';
 import { MobileMenu } from './MobileMenu';
+import { AdmissionsTicker } from './AdmissionsTicker';
 import { Menu, X, ChevronDown, MapPin, PhoneCall } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { siteConfig } from '@/config/site';
@@ -116,7 +117,10 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
         </div>
       </div>
 
-      {/* 2. ROW 1 — BRANDING ROW (White Background) */}
+      {/* 2. ADMISSIONS TICKER */}
+      <AdmissionsTicker />
+
+      {/* 3. ROW 1 — BRANDING ROW (White Background) */}
       <div className="w-full bg-white border-b border-[#E3E6E5] py-3.5 md:py-4.5">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo + Institution Name Branding */}
