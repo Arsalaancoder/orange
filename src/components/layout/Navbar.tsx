@@ -6,7 +6,7 @@ import { CollegesMegaMenu } from './CollegesMegaMenu';
 import { ProgramsMegaMenu } from './ProgramsMegaMenu';
 import { MoreDropdown } from './MoreDropdown';
 import { MobileMenu } from './MobileMenu';
-import { Menu, ChevronDown, MapPin, PhoneCall, Home } from 'lucide-react';
+import { Menu, ChevronDown, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { siteConfig } from '@/config/site';
 
@@ -14,20 +14,13 @@ interface NavbarProps {
   initialMode?: 'solid' | 'transparent';
 }
 
-export const Navbar: React.FC<NavbarProps> = () => {
+export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const location = useLocation();
   const navRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Dynamic date formatting matching classic educational institution headers
-  const currentDateStr = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
 
   const handleMouseEnter = (label: string) => {
     if (closeTimeoutRef.current) {
@@ -52,6 +45,14 @@ export const Navbar: React.FC<NavbarProps> = () => {
         clearTimeout(closeTimeoutRef.current);
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Close active dropdown on route change
@@ -86,145 +87,104 @@ export const Navbar: React.FC<NavbarProps> = () => {
     setActiveDropdown(activeDropdown === label ? null : label);
   };
 
+  const isTransparent = initialMode === 'transparent' && !scrolled;
+
   return (
-    <header className="w-full text-[#202426] z-40 relative shadow-sm">
-      {/* 1. TOP UTILITY ANNOUNCEMENT STRIP */}
-      <div className="bg-[#380202] text-amber-100/90 text-[11px] md:text-xs py-1.5 px-4 border-b border-amber-500/20">
-        <div className="max-w-[1340px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2">
-          <div className="flex items-center gap-2 sm:gap-3 text-amber-200/90">
-            <span className="font-semibold tracking-wide text-white text-[11px] md:text-xs">
-              {currentDateStr}
-            </span>
-            <span className="hidden sm:inline text-amber-500/40">|</span>
-            <span className="hidden sm:flex items-center gap-1.5 text-amber-100/90 font-medium">
-              <MapPin className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
-              Campuses: Chengicherla | Nagaram | Nalgonda
+    <header className="sticky top-0 z-40 w-full bg-white text-[#202426] border-b border-[#E3E6E5] shadow-2xs transition-all duration-300">
+      {/* Top Announcement Bar (Existing Dark Navy Bar) */}
+      <div
+        className={cn(
+          'text-white text-[11px] md:text-xs py-2 px-4 transition-colors duration-300 border-b border-white/10',
+          isTransparent ? 'bg-[#101820]/90 backdrop-blur-md' : 'bg-[#101820]'
+        )}
+      >
+        <div className="max-w-[1340px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-white tracking-wide text-[11px] md:text-xs">
+              Orange Group of Nursing & Paramedical Colleges
             </span>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs">
-            <span className="hidden md:inline text-amber-100/80 font-medium">
-              (Approved by Govt. of Telangana & Affiliated to KNRUHS)
+          <div className="hidden sm:flex items-center gap-6 text-gray-300 text-[11px]">
+            <span className="flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-[#F26A21]" />
+              Campuses: Chengicherla / Hyderabad | Nagaram / Hyderabad | Nalgonda
             </span>
-            <span className="hidden md:inline text-amber-500/40">|</span>
-            <a
-              href={`tel:${siteConfig.contact.primaryPhone}`}
-              className="flex items-center gap-1 font-semibold text-white hover:text-amber-300 transition-colors"
-            >
-              <PhoneCall className="w-3 h-3 text-[#F26A21]" />
-              <span>Admissions Helpline: {siteConfig.contact.primaryPhone}</span>
-            </a>
+            <span className="text-white/30">|</span>
+            <span className="font-semibold text-white">
+              Admissions Helpline: {siteConfig.contact.primaryPhone}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 2. FULL-WIDTH BRANDED HEADER STRIP (Classic Rich Maroon Gradient Header) */}
-      <div className="w-full bg-gradient-to-r from-[#4A0303] via-[#7A0D0D] to-[#4A0303] text-white py-3.5 md:py-4.5 px-4 sm:px-6 lg:px-8 border-b border-amber-500/30 relative overflow-hidden shadow-inner">
-        {/* Subtle radial light accent */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(242,106,33,0.14)_0,transparent_75%)] pointer-events-none" />
-
-        <div className="max-w-[1340px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 relative z-10">
-          
-          {/* Left: Orange Group / College Logo */}
-          <div className="flex items-center gap-3 shrink-0">
-            <Link
-              to="/"
-              className="group flex items-center shrink-0 transition-transform duration-300 hover:scale-[1.02] focus-visible:outline-none"
-              aria-label="Orange Group of Nursing & Paramedical Colleges Home"
-            >
-              <div className="bg-white rounded-xl p-1.5 sm:p-2 shadow-xl border border-amber-300/40 flex items-center justify-center">
-                <img
-                  src="/logo.png"
-                  alt="Orange Group Logo"
-                  className="h-12 sm:h-16 md:h-18 lg:h-20 w-auto object-contain"
-                />
-              </div>
-            </Link>
-          </div>
-
-          {/* Center: Institution Main Title, Subtitle, & Location Details */}
-          <div className="text-center flex-1 px-1 sm:px-4">
-            {/* Main large title */}
-            <h1 className="text-base sm:text-xl md:text-2xl lg:text-[27px] font-black text-white tracking-wide uppercase font-serif drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)] leading-tight">
-              ORANGE GROUP OF NURSING & PARAMEDICAL COLLEGES
-            </h1>
-
-            {/* Subtitle below main title */}
-            <p className="italic text-amber-200 text-xs sm:text-sm md:text-base font-serif font-medium tracking-wider drop-shadow-sm mt-0.5">
-              In Pursuit of Excellence
-            </p>
-
-            {/* Small line below subtitle */}
-            <p className="text-amber-100/90 text-[10px] sm:text-xs font-sans font-semibold tracking-widest uppercase mt-0.5 text-amber-100/80">
-              Hyderabad &nbsp;/&nbsp; Chengicherla &nbsp;/&nbsp; Nagaram &nbsp;/&nbsp; Nalgonda
-            </p>
-          </div>
-
-          {/* Right: Institutional Seal Emblem Badge */}
-          <div className="hidden lg:flex items-center shrink-0">
-            <div className="border-2 border-amber-400/60 bg-gradient-to-br from-[#7A0D0D] via-[#5C0808] to-[#3B0303] text-amber-200 rounded-full w-20 h-20 xl:w-22 xl:h-22 flex flex-col items-center justify-center text-center shadow-xl p-1 border-dashed">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-amber-300/90 leading-none">Estd 2008</span>
-              <span className="text-lg xl:text-xl font-black text-white leading-tight font-serif my-0.5">20+</span>
-              <span className="text-[8px] xl:text-[9px] font-semibold uppercase tracking-tight text-amber-200 leading-none">Years Excellence</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* 3. MAIN NAVIGATION BAR (STICKY BELOW BRANDING HEADER STRIP) */}
+      {/* Main Navbar Header (White Background, Clean & Modern) */}
       <div
         ref={navRef}
-        className="sticky top-0 z-40 w-full bg-[#3B0303] text-white border-b-2 border-amber-500/40 shadow-md"
+        className={cn(
+          'w-full transition-colors duration-300 relative py-2.5 sm:py-3',
+          isTransparent
+            ? 'bg-transparent text-white border-white/15'
+            : 'bg-white text-[#202426] border-[#E3E6E5] shadow-2xs',
+          scrolled ? 'py-2' : ''
+        )}
       >
-        <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between min-h-[46px] relative">
+        <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center justify-between gap-3 lg:gap-6 relative">
           
-          {/* Mobile view toggle header */}
-          <div className="flex lg:hidden items-center justify-between w-full py-2">
+          {/* Logo + Institution Name Branding (Left Side) */}
+          <div className="flex items-center justify-between w-full lg:w-auto shrink-0">
+            <Link
+              to="/"
+              className="flex items-center gap-3 sm:gap-3.5 group focus-visible:outline-none shrink-0"
+              aria-label="Orange Group of Nursing & Paramedical Colleges - Home"
+            >
+              <img
+                src="/logo.png"
+                alt="Orange Group Logo"
+                className="h-11 sm:h-13 md:h-14 lg:h-15 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+              />
+              <div className="flex flex-col justify-center">
+                <span className="font-extrabold text-[#101820] text-xs sm:text-sm md:text-base lg:text-[17px] tracking-tight uppercase leading-tight font-sans">
+                  ORANGE GROUP OF NURSING & PARAMEDICAL COLLEGES
+                </span>
+                <span className="text-[11px] sm:text-xs text-[#F26A21] italic font-serif font-semibold tracking-wide mt-0.5">
+                  In Pursuit of Excellence
+                </span>
+              </div>
+            </Link>
+
+            {/* Mobile Menu Hamburger Trigger Button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-amber-400/30 rounded-lg text-white font-semibold text-xs tracking-wider uppercase transition-colors cursor-pointer"
+              className={cn(
+                'lg:hidden w-10 h-10 rounded-xl border flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-2',
+                isTransparent
+                  ? 'border-white/20 text-white hover:bg-white/10'
+                  : 'border-[#E3E6E5] text-[#202426] hover:bg-[#F3F4F4]'
+              )}
               aria-label="Open mobile navigation menu"
+              aria-expanded={mobileMenuOpen}
             >
-              <Menu className="w-4 h-4 text-amber-400" />
-              <span>Menu</span>
+              <Menu className="w-5 h-5" />
             </button>
-
-            <span className="text-xs font-bold text-amber-200 font-serif tracking-wide truncate max-w-[180px]">
-              Orange Colleges
-            </span>
-
-            <PrimaryButton
-              to="/admissions#enquiry"
-              size="sm"
-              className="h-8 text-[11px] px-3 bg-[#F26A21] hover:bg-[#D95412] text-white font-bold border border-amber-300/30"
-            >
-              Enquire
-            </PrimaryButton>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav
-            className="hidden lg:flex items-center justify-center flex-1 space-x-1 xl:space-x-1.5 py-1.5"
-            aria-label="Main Navigation"
-          >
-            {mainNavigation.map((item, index) => {
-              const isCurrentRoute = location.pathname === item.href;
-              const isChildActive = Boolean(
-                item.dropdownItems?.some((sub) => location.pathname.startsWith(sub.href))
-              );
-              const isActive = isCurrentRoute || isChildActive;
-              const isDropdownOpen = activeDropdown === item.label;
+          {/* Navigation Links + CTA Container */}
+          <div className="hidden lg:flex items-center justify-between flex-1 gap-4 xl:gap-6">
+            {/* Desktop Navigation Links */}
+            <nav className="flex items-center space-x-0.5 xl:space-x-1.5" aria-label="Main Navigation">
+              {mainNavigation.map((item) => {
+                const isCurrentRoute = location.pathname === item.href;
+                const isChildActive = Boolean(
+                  item.dropdownItems?.some((sub) => location.pathname.startsWith(sub.href))
+                );
+                const isActive = isCurrentRoute || isChildActive;
+                const isDropdownOpen = activeDropdown === item.label;
 
-              return (
-                <React.Fragment key={item.label}>
-                  {/* Bullet Dot Separator between Nav Items */}
-                  {index > 0 && (
-                    <span className="text-amber-400/50 font-bold text-xs select-none px-0.5">•</span>
-                  )}
-
-                  {item.hasDropdown ? (
+                if (item.hasDropdown) {
+                  return (
                     <div
+                      key={item.label}
                       className={item.label === 'More' ? 'relative' : ''}
                       onMouseEnter={() => handleMouseEnter(item.label)}
                       onMouseLeave={handleMouseLeave}
@@ -232,10 +192,14 @@ export const Navbar: React.FC<NavbarProps> = () => {
                       <button
                         onClick={() => toggleDropdown(item.label)}
                         className={cn(
-                          'px-2.5 xl:px-3 py-1.5 text-xs xl:text-[13px] font-bold tracking-wider uppercase rounded-md inline-flex items-center gap-1 transition-all duration-150 cursor-pointer whitespace-nowrap focus-visible:ring-2 focus-visible:ring-amber-400',
-                          isActive || isDropdownOpen
-                            ? 'text-amber-300 bg-white/15'
-                            : 'text-white hover:text-amber-300 hover:bg-white/10'
+                          'relative px-2.5 xl:px-3 py-2 text-xs xl:text-sm font-bold rounded-lg inline-flex items-center gap-1 transition-all duration-200 cursor-pointer whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
+                          isTransparent
+                            ? isActive || isDropdownOpen
+                              ? 'text-[#F26A21]'
+                              : 'text-white hover:text-[#F26A21]'
+                            : isActive || isDropdownOpen
+                              ? 'text-[#F26A21]'
+                              : 'text-[#202426] hover:text-[#F26A21]'
                         )}
                         aria-expanded={isDropdownOpen}
                         aria-haspopup="true"
@@ -243,59 +207,63 @@ export const Navbar: React.FC<NavbarProps> = () => {
                         <span>{item.label}</span>
                         <ChevronDown
                           className={cn(
-                            'w-3.5 h-3.5 transition-transform duration-200 text-amber-300/90',
-                            isDropdownOpen && 'rotate-180 text-amber-400'
+                            'w-3.5 h-3.5 transition-transform duration-200',
+                            isDropdownOpen && 'rotate-180 text-[#F26A21]'
                           )}
                         />
+                        {(isDropdownOpen || isActive) && (
+                          <span className="absolute -bottom-1 left-2.5 right-2.5 h-[2.5px] bg-[#F26A21] rounded-full transition-all" />
+                        )}
                       </button>
 
                       {isDropdownOpen && item.label === 'More' && (
                         <div
                           onMouseEnter={() => handleMouseEnter('More')}
                           onMouseLeave={handleMouseLeave}
-                          className="absolute top-full left-0 z-50 pt-1"
+                          className="absolute top-full left-0 z-50"
                         >
                           <MoreDropdown onClose={() => setActiveDropdown(null)} />
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <Link
-                      to={item.href}
-                      className={cn(
-                        'px-2.5 xl:px-3 py-1.5 text-xs xl:text-[13px] font-bold tracking-wider uppercase rounded-md transition-colors duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-amber-400 flex items-center gap-1.5',
-                        isActive
-                          ? 'text-amber-300 bg-white/15'
-                          : 'text-white hover:text-amber-300 hover:bg-white/10'
-                      )}
-                    >
-                      {item.label === 'Home' && <Home className="w-3.5 h-3.5 text-amber-400" />}
-                      <span>{item.label}</span>
-                    </Link>
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </nav>
+                  );
+                }
 
-          {/* Right Action: Enquire Now Button */}
-          <div className="hidden lg:flex items-center shrink-0 ml-3">
-            <PrimaryButton
-              to="/admissions#enquiry"
-              size="sm"
-              showArrow
-              className="h-8 text-xs px-3.5 bg-[#F26A21] hover:bg-[#D95412] text-white font-bold shadow-md border border-amber-300/40 hover:scale-[1.02]"
-            >
-              Enquire Now
-            </PrimaryButton>
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      'px-2.5 xl:px-3 py-2 text-xs xl:text-sm font-bold rounded-lg transition-colors duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
+                      isTransparent
+                        ? isActive
+                          ? 'text-[#F26A21] bg-white/10'
+                          : 'text-white hover:text-[#F26A21] hover:bg-white/10'
+                        : isActive
+                          ? 'text-[#F26A21] bg-[#F26A21]/5'
+                          : 'text-[#202426] hover:text-[#F26A21] hover:bg-[#F3F4F4]'
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Desktop Action: Primary Orange Enquire Now Button */}
+            <div className="flex items-center shrink-0">
+              <PrimaryButton to="/admissions#enquiry" size="sm" showArrow className="h-10 text-xs xl:text-sm px-5">
+                Enquire Now
+              </PrimaryButton>
+            </div>
           </div>
 
-          {/* Mega Menus anchored absolutely to navigation bar */}
+          {/* Mega Menus anchored absolutely to header container */}
           {activeDropdown === 'Colleges' && (
             <div
               onMouseEnter={() => handleMouseEnter('Colleges')}
               onMouseLeave={handleMouseLeave}
-              className="absolute inset-x-0 top-full z-50 px-4 sm:px-6 lg:px-8 pointer-events-auto pt-1"
+              className="absolute inset-x-0 top-full z-50 px-4 sm:px-6 lg:px-8 pointer-events-auto"
             >
               <CollegesMegaMenu onClose={() => setActiveDropdown(null)} />
             </div>
@@ -304,7 +272,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
             <div
               onMouseEnter={() => handleMouseEnter('Programs')}
               onMouseLeave={handleMouseLeave}
-              className="absolute inset-x-0 top-full z-50 px-4 sm:px-6 lg:px-8 pointer-events-auto pt-1"
+              className="absolute inset-x-0 top-full z-50 px-4 sm:px-6 lg:px-8 pointer-events-auto"
             >
               <ProgramsMegaMenu onClose={() => setActiveDropdown(null)} />
             </div>
@@ -317,4 +285,5 @@ export const Navbar: React.FC<NavbarProps> = () => {
     </header>
   );
 };
+
 
