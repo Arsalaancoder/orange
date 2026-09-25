@@ -116,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
         </div>
       </div>
 
-      {/* Main Navbar Header (Strict single-row flex layout on desktop with 48px gap) */}
+      {/* Main Navbar Header (3-Column Desktop Grid Layout: 760px | 1fr | auto with 32px gap) */}
       <div
         ref={navRef}
         className={cn(
@@ -127,32 +127,32 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
           scrolled ? 'py-2 shadow-sm' : ''
         )}
       >
-        <div className="max-w-[1900px] mx-auto px-4 xl:px-6 flex flex-row items-center justify-between flex-nowrap gap-8 lg:gap-10 xl:gap-12 relative min-w-0">
+        <div className="max-w-[1900px] mx-auto px-4 xl:px-6 flex items-center justify-between xl:grid xl:grid-cols-[680px_1fr_auto] 2xl:grid-cols-[760px_1fr_auto] xl:items-center gap-4 xl:gap-x-8 relative min-w-0">
           
-          {/* 1. Branding Section (Logo + College Name + Tagline) - flex-shrink: 0 */}
-          <div className="flex items-center shrink-0 min-w-0">
+          {/* Column 1: Branding Section (Logo + College Name + Tagline) - Max Width 760px */}
+          <div className="flex items-center max-w-[680px] 2xl:max-w-[760px] overflow-hidden shrink-0 min-w-0">
             <Link
               to="/"
-              className="flex items-center gap-2.5 sm:gap-3 group focus-visible:outline-none shrink-0"
+              className="flex items-center gap-2.5 sm:gap-3 group focus-visible:outline-none shrink min-w-0"
               aria-label="Orange Group of Nursing & Paramedical Colleges - Home"
             >
               <img
                 src="/logo.png"
                 alt="Orange Group Logo"
-                className="h-11 sm:h-13 md:h-14 xl:h-[72px] 2xl:h-[78px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] shrink-0"
+                className="h-11 sm:h-13 md:h-14 xl:h-[72px] 2xl:h-[76px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] shrink-0"
               />
               <div className="flex flex-col justify-center min-w-0">
-                <span className="font-extrabold text-[#101820] text-xs sm:text-sm md:text-base xl:text-[18px] 2xl:text-[20px] tracking-tight uppercase leading-tight font-sans whitespace-nowrap">
+                <span className="font-extrabold text-[#101820] text-xs sm:text-sm md:text-base xl:text-[17px] 2xl:text-[19px] tracking-tight uppercase leading-tight font-sans whitespace-nowrap truncate">
                   ORANGE GROUP OF NURSING & PARAMEDICAL COLLEGES
                 </span>
-                <span className="text-[11px] sm:text-xs xl:text-[14px] text-[#F26A21] italic font-serif font-semibold tracking-wide mt-0.5 whitespace-nowrap">
+                <span className="text-[11px] sm:text-xs xl:text-[13px] 2xl:text-[14px] text-[#F26A21] italic font-serif font-semibold tracking-wide mt-0.5 whitespace-nowrap">
                   In Pursuit of Excellence
                 </span>
               </div>
             </Link>
           </div>
 
-          {/* 2. Mobile Menu Hamburger Trigger Button (Visible below 1280px / xl) */}
+          {/* Mobile Menu Hamburger Trigger Button (Visible below 1280px / xl) */}
           <button
             onClick={() => setMobileMenuOpen(true)}
             className={cn(
@@ -167,93 +167,93 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* 3. Desktop Navigation Links & CTA Container (≥ 1280px / xl breakpoint) */}
-          <div className="hidden xl:flex items-center justify-end flex-nowrap whitespace-nowrap flex-1 shrink-0 gap-5 xl:gap-6 2xl:gap-7 min-w-0">
-            {/* Navigation Links */}
-            <nav className="flex items-center gap-3 xl:gap-4 2xl:gap-5 flex-nowrap whitespace-nowrap shrink-0" aria-label="Main Navigation">
-              {mainNavigation.map((item) => {
-                const isCurrentRoute = location.pathname === item.href;
-                const isChildActive = Boolean(
-                  item.dropdownItems?.some((sub) => location.pathname.startsWith(sub.href))
-                );
-                const isActive = isCurrentRoute || isChildActive;
-                const isDropdownOpen = activeDropdown === item.label;
+          {/* Column 2: Desktop Navigation Links (>= 1280px / xl) */}
+          <nav
+            className="hidden xl:flex items-center justify-end flex-nowrap whitespace-nowrap gap-4 xl:gap-5 2xl:gap-6 min-w-0"
+            aria-label="Main Navigation"
+          >
+            {mainNavigation.map((item) => {
+              const isCurrentRoute = location.pathname === item.href;
+              const isChildActive = Boolean(
+                item.dropdownItems?.some((sub) => location.pathname.startsWith(sub.href))
+              );
+              const isActive = isCurrentRoute || isChildActive;
+              const isDropdownOpen = activeDropdown === item.label;
 
-                if (item.hasDropdown) {
-                  return (
-                    <div
-                      key={item.label}
-                      className={item.label === 'More' ? 'relative' : ''}
-                      onMouseEnter={() => handleMouseEnter(item.label)}
-                      onMouseLeave={handleMouseLeave}
-                    >
-                      <button
-                        onClick={() => toggleDropdown(item.label)}
-                        className={cn(
-                          'relative px-2 xl:px-2.5 2xl:px-3 py-2 text-xs xl:text-[13px] 2xl:text-sm font-bold rounded-lg inline-flex items-center gap-1 transition-all duration-200 cursor-pointer whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
-                          isTransparent
-                            ? isActive || isDropdownOpen
-                              ? 'text-[#F26A21]'
-                              : 'text-white hover:text-[#F26A21]'
-                            : isActive || isDropdownOpen
-                              ? 'text-[#F26A21]'
-                              : 'text-[#202426] hover:text-[#F26A21]'
-                        )}
-                        aria-expanded={isDropdownOpen}
-                        aria-haspopup="true"
-                      >
-                        <span>{item.label}</span>
-                        <ChevronDown
-                          className={cn(
-                            'w-3.5 h-3.5 transition-transform duration-200',
-                            isDropdownOpen && 'rotate-180 text-[#F26A21]'
-                          )}
-                        />
-                        {(isDropdownOpen || isActive) && (
-                          <span className="absolute -bottom-1 left-2 right-2 h-[2.5px] bg-[#F26A21] rounded-full transition-all" />
-                        )}
-                      </button>
-
-                      {isDropdownOpen && item.label === 'More' && (
-                        <div
-                          onMouseEnter={() => handleMouseEnter('More')}
-                          onMouseLeave={handleMouseLeave}
-                          className="absolute top-full right-0 z-50 pt-1"
-                        >
-                          <MoreDropdown onClose={() => setActiveDropdown(null)} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-
+              if (item.hasDropdown) {
                 return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className={cn(
-                      'px-2 xl:px-2.5 2xl:px-3 py-2 text-xs xl:text-[13px] 2xl:text-sm font-bold rounded-lg transition-colors duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
-                      isTransparent
-                        ? isActive
-                          ? 'text-[#F26A21] bg-white/10'
-                          : 'text-white hover:text-[#F26A21] hover:bg-white/10'
-                        : isActive
-                          ? 'text-[#F26A21] bg-[#F26A21]/5'
-                          : 'text-[#202426] hover:text-[#F26A21] hover:bg-[#F3F4F4]'
-                    )}
+                  <div
+                    key={item.label}
+                    className={item.label === 'More' ? 'relative' : ''}
+                    onMouseEnter={() => handleMouseEnter(item.label)}
+                    onMouseLeave={handleMouseLeave}
                   >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
+                    <button
+                      onClick={() => toggleDropdown(item.label)}
+                      className={cn(
+                        'relative px-2 xl:px-2.5 2xl:px-3 py-2 text-xs xl:text-[13px] 2xl:text-sm font-bold rounded-lg inline-flex items-center gap-1 transition-all duration-200 cursor-pointer whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
+                        isTransparent
+                          ? isActive || isDropdownOpen
+                            ? 'text-[#F26A21]'
+                            : 'text-white hover:text-[#F26A21]'
+                          : isActive || isDropdownOpen
+                            ? 'text-[#F26A21]'
+                            : 'text-[#202426] hover:text-[#F26A21]'
+                      )}
+                      aria-expanded={isDropdownOpen}
+                      aria-haspopup="true"
+                    >
+                      <span>{item.label}</span>
+                      <ChevronDown
+                        className={cn(
+                          'w-3.5 h-3.5 transition-transform duration-200',
+                          isDropdownOpen && 'rotate-180 text-[#F26A21]'
+                        )}
+                      />
+                      {(isDropdownOpen || isActive) && (
+                        <span className="absolute -bottom-1 left-2 right-2 h-[2.5px] bg-[#F26A21] rounded-full transition-all" />
+                      )}
+                    </button>
 
-            {/* Desktop Action: Primary Orange Enquire Now Button */}
-            <div className="flex items-center shrink-0 ml-1 xl:ml-3">
-              <PrimaryButton to="/admissions#enquiry" size="sm" showArrow className="h-9 xl:h-10 text-xs xl:text-sm px-4 xl:px-5 whitespace-nowrap shrink-0">
-                Enquire Now
-              </PrimaryButton>
-            </div>
+                    {isDropdownOpen && item.label === 'More' && (
+                      <div
+                        onMouseEnter={() => handleMouseEnter('More')}
+                        onMouseLeave={handleMouseLeave}
+                        className="absolute top-full right-0 z-50 pt-1"
+                      >
+                        <MoreDropdown onClose={() => setActiveDropdown(null)} />
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={cn(
+                    'px-2 xl:px-2.5 2xl:px-3 py-2 text-xs xl:text-[13px] 2xl:text-sm font-bold rounded-lg transition-colors duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
+                    isTransparent
+                      ? isActive
+                        ? 'text-[#F26A21] bg-white/10'
+                        : 'text-white hover:text-[#F26A21] hover:bg-white/10'
+                      : isActive
+                        ? 'text-[#F26A21] bg-[#F26A21]/5'
+                        : 'text-[#202426] hover:text-[#F26A21] hover:bg-[#F3F4F4]'
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Column 3: Desktop Action Button (>= 1280px / xl) */}
+          <div className="hidden xl:flex items-center justify-end shrink-0">
+            <PrimaryButton to="/admissions#enquiry" size="sm" showArrow className="h-9 xl:h-10 text-xs xl:text-sm px-4 xl:px-5 whitespace-nowrap shrink-0">
+              Enquire Now
+            </PrimaryButton>
           </div>
 
           {/* Mega Menus anchored absolutely to header container */}
