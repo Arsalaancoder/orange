@@ -61,7 +61,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[#101820]/70 backdrop-blur-xs z-50 lg:hidden"
+            className="fixed inset-0 bg-[#101820]/70 backdrop-blur-xs z-50 xl:hidden"
             aria-hidden="true"
           />
 
@@ -71,7 +71,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-            className="fixed inset-y-0 right-0 w-full max-w-md bg-white z-50 lg:hidden flex flex-col shadow-2xl overflow-hidden"
+            className="fixed inset-y-0 right-0 w-full max-w-md bg-white z-50 xl:hidden flex flex-col shadow-2xl overflow-hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile Navigation Menu"
