@@ -98,7 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
           isTransparent ? 'bg-[#101820]/90 backdrop-blur-md' : 'bg-[#101820]'
         )}
       >
-        <div className="max-w-[1900px] mx-auto px-4 xl:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-[1900px] mx-auto px-4 xl:px-6 flex flex-row items-center justify-between gap-2 whitespace-nowrap">
           <div className="flex items-center gap-1.5 text-gray-300 text-[11px] md:text-xs">
             <MapPin className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
             <span>Campuses: Chengicherla / Hyderabad | Nagaram / Hyderabad | Nalgonda</span>
@@ -116,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
         </div>
       </div>
 
-      {/* Main Navbar Header */}
+      {/* Main Navbar Header (Strict single-row flex layout on desktop) */}
       <div
         ref={navRef}
         className={cn(
@@ -127,52 +127,50 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
           scrolled ? 'py-2 shadow-sm' : ''
         )}
       >
-        <div className="max-w-[1900px] mx-auto px-4 xl:px-6 flex items-center justify-between gap-3 xl:gap-5 2xl:gap-6 relative min-w-0">
+        <div className="max-w-[1900px] mx-auto px-4 xl:px-6 flex flex-row items-center justify-between flex-nowrap gap-4 xl:gap-5 2xl:gap-6 relative min-w-0">
           
-          {/* Logo + Institution Name Branding (Controlled Width <= 720px) */}
-          <div className="flex items-center justify-between w-full xl:w-auto shrink max-w-[720px] min-w-0">
+          {/* 1. Branding Section (Logo + College Name + Tagline) - Max Width 760px */}
+          <div className="flex items-center shrink-initial max-w-[760px] min-w-0">
             <Link
               to="/"
               className="flex items-center gap-2.5 sm:gap-3 group focus-visible:outline-none shrink min-w-0"
               aria-label="Orange Group of Nursing & Paramedical Colleges - Home"
             >
-              {/* Logo height scaled around 72-78px on desktop */}
               <img
                 src="/logo.png"
                 alt="Orange Group Logo"
-                className="h-11 sm:h-13 md:h-14 xl:h-[74px] 2xl:h-[78px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] shrink-0"
+                className="h-11 sm:h-13 md:h-14 xl:h-[76px] 2xl:h-[82px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] shrink-0"
               />
               <div className="flex flex-col justify-center min-w-0">
-                {/* Institution title font sized 18-20px on desktop, kept on single line */}
-                <span className="font-extrabold text-[#101820] text-xs sm:text-sm md:text-base xl:text-[17px] 2xl:text-[20px] tracking-tight uppercase leading-tight font-sans whitespace-nowrap truncate">
+                <span className="font-extrabold text-[#101820] text-xs sm:text-sm md:text-base xl:text-[18px] 2xl:text-[21px] tracking-tight uppercase leading-tight font-sans whitespace-nowrap truncate">
                   ORANGE GROUP OF NURSING & PARAMEDICAL COLLEGES
                 </span>
-                <span className="text-[11px] sm:text-xs xl:text-[14px] text-[#F26A21] italic font-serif font-semibold tracking-wide mt-0.5 whitespace-nowrap">
+                <span className="text-[11px] sm:text-xs xl:text-[14px] 2xl:text-[15px] text-[#F26A21] italic font-serif font-semibold tracking-wide mt-0.5 whitespace-nowrap">
                   In Pursuit of Excellence
                 </span>
               </div>
             </Link>
-
-            {/* Mobile / Tablet Hamburger Toggle Button (Active below 1280px / xl) */}
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className={cn(
-                'xl:hidden w-10 h-10 rounded-xl border flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-2',
-                isTransparent
-                  ? 'border-white/20 text-white hover:bg-white/10'
-                  : 'border-[#E3E6E5] text-[#202426] hover:bg-[#F3F4F4]'
-              )}
-              aria-label="Open mobile navigation menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              <Menu className="w-5 h-5" />
-            </button>
           </div>
 
-          {/* Desktop Navigation Links & CTA Container (≥ 1280px / xl breakpoint) */}
-          <div className="hidden xl:flex items-center justify-end flex-1 gap-3 xl:gap-5 2xl:gap-6 min-w-0">
-            {/* Desktop Navigation Links (No Wrap, Responsive Spacing) */}
-            <nav className="flex items-center space-x-0.5 xl:space-x-1 2xl:space-x-1.5 min-w-0 shrink-0" aria-label="Main Navigation">
+          {/* 2. Mobile Menu Hamburger Trigger Button (Visible below 1280px / xl) */}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className={cn(
+              'xl:hidden w-10 h-10 rounded-xl border flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-auto',
+              isTransparent
+                ? 'border-white/20 text-white hover:bg-white/10'
+                : 'border-[#E3E6E5] text-[#202426] hover:bg-[#F3F4F4]'
+            )}
+            aria-label="Open mobile navigation menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          {/* 3. Desktop Navigation Links & CTA Container (≥ 1280px / xl breakpoint - Single Line) */}
+          <div className="hidden xl:flex items-center justify-end flex-nowrap whitespace-nowrap flex-1 shrink-0 gap-4 xl:gap-5 2xl:gap-6 min-w-0">
+            {/* Navigation Links */}
+            <nav className="flex items-center space-x-0.5 xl:space-x-1 2xl:space-x-1.5 flex-nowrap whitespace-nowrap shrink-0" aria-label="Main Navigation">
               {mainNavigation.map((item) => {
                 const isCurrentRoute = location.pathname === item.href;
                 const isChildActive = Boolean(
@@ -252,7 +250,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
 
             {/* Desktop Action: Primary Orange Enquire Now Button */}
             <div className="flex items-center shrink-0">
-              <PrimaryButton to="/admissions#enquiry" size="sm" showArrow className="h-9 xl:h-10 text-xs xl:text-sm px-4 xl:px-5 whitespace-nowrap">
+              <PrimaryButton to="/admissions#enquiry" size="sm" showArrow className="h-9 xl:h-10 text-xs xl:text-sm px-4 xl:px-5 whitespace-nowrap shrink-0">
                 Enquire Now
               </PrimaryButton>
             </div>
