@@ -98,7 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
           isTransparent ? 'bg-[#101820]/90 backdrop-blur-md' : 'bg-[#101820]'
         )}
       >
-        <div className="max-w-[1800px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-[1900px] mx-auto px-4 xl:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-gray-300 text-[11px] md:text-xs">
             <MapPin className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
             <span>Campuses: Chengicherla / Hyderabad | Nagaram / Hyderabad | Nalgonda</span>
@@ -127,37 +127,37 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
           scrolled ? 'py-2 shadow-sm' : ''
         )}
       >
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 lg:gap-4 xl:gap-6 relative">
+        <div className="max-w-[1900px] mx-auto px-4 xl:px-6 flex items-center justify-between gap-3 xl:gap-5 2xl:gap-6 relative min-w-0">
           
-          {/* Logo + Institution Name Branding */}
-          <div className="flex items-center justify-between w-full lg:w-auto shrink-0">
+          {/* Logo + Institution Name Branding (Controlled Width <= 720px) */}
+          <div className="flex items-center justify-between w-full xl:w-auto shrink max-w-[720px] min-w-0">
             <Link
               to="/"
-              className="flex items-center gap-2.5 sm:gap-3 group focus-visible:outline-none shrink-0"
+              className="flex items-center gap-2.5 sm:gap-3 group focus-visible:outline-none shrink min-w-0"
               aria-label="Orange Group of Nursing & Paramedical Colleges - Home"
             >
-              {/* Logo height set to 78px on desktop (76-82px requested) */}
+              {/* Logo height scaled around 72-78px on desktop */}
               <img
                 src="/logo.png"
                 alt="Orange Group Logo"
-                className="h-12 sm:h-14 md:h-16 lg:h-[78px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+                className="h-11 sm:h-13 md:h-14 xl:h-[74px] 2xl:h-[78px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] shrink-0"
               />
               <div className="flex flex-col justify-center min-w-0">
-                {/* Single line prominent institution name */}
-                <span className="font-extrabold text-[#101820] text-xs sm:text-sm md:text-sm lg:text-[14px] xl:text-[16px] 2xl:text-[17px] tracking-tight uppercase leading-tight font-sans whitespace-nowrap">
+                {/* Institution title font sized 18-20px on desktop, kept on single line */}
+                <span className="font-extrabold text-[#101820] text-xs sm:text-sm md:text-base xl:text-[17px] 2xl:text-[20px] tracking-tight uppercase leading-tight font-sans whitespace-nowrap truncate">
                   ORANGE GROUP OF NURSING & PARAMEDICAL COLLEGES
                 </span>
-                <span className="text-[11px] sm:text-xs text-[#F26A21] italic font-serif font-semibold tracking-wide mt-0.5 whitespace-nowrap">
+                <span className="text-[11px] sm:text-xs xl:text-[14px] text-[#F26A21] italic font-serif font-semibold tracking-wide mt-0.5 whitespace-nowrap">
                   In Pursuit of Excellence
                 </span>
               </div>
             </Link>
 
-            {/* Mobile Menu Hamburger Trigger Button */}
+            {/* Mobile / Tablet Hamburger Toggle Button (Active below 1280px / xl) */}
             <button
               onClick={() => setMobileMenuOpen(true)}
               className={cn(
-                'lg:hidden w-10 h-10 rounded-xl border flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-2',
+                'xl:hidden w-10 h-10 rounded-xl border flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-2',
                 isTransparent
                   ? 'border-white/20 text-white hover:bg-white/10'
                   : 'border-[#E3E6E5] text-[#202426] hover:bg-[#F3F4F4]'
@@ -169,10 +169,10 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
             </button>
           </div>
 
-          {/* Desktop Navigation Links & CTA Container */}
-          <div className="hidden lg:flex items-center justify-end flex-1 gap-2 lg:gap-3 xl:gap-5 min-w-0">
-            {/* Desktop Navigation Links */}
-            <nav className="flex items-center space-x-0.5 xl:space-x-1 min-w-0" aria-label="Main Navigation">
+          {/* Desktop Navigation Links & CTA Container (≥ 1280px / xl breakpoint) */}
+          <div className="hidden xl:flex items-center justify-end flex-1 gap-3 xl:gap-5 2xl:gap-6 min-w-0">
+            {/* Desktop Navigation Links (No Wrap, Responsive Spacing) */}
+            <nav className="flex items-center space-x-0.5 xl:space-x-1 2xl:space-x-1.5 min-w-0 shrink-0" aria-label="Main Navigation">
               {mainNavigation.map((item) => {
                 const isCurrentRoute = location.pathname === item.href;
                 const isChildActive = Boolean(
@@ -192,7 +192,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
                       <button
                         onClick={() => toggleDropdown(item.label)}
                         className={cn(
-                          'relative px-2 xl:px-2.5 py-2 text-xs xl:text-[13px] 2xl:text-sm font-bold rounded-lg inline-flex items-center gap-1 transition-all duration-200 cursor-pointer whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
+                          'relative px-2 xl:px-2.5 2xl:px-3 py-2 text-xs xl:text-[13px] 2xl:text-sm font-bold rounded-lg inline-flex items-center gap-1 transition-all duration-200 cursor-pointer whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
                           isTransparent
                             ? isActive || isDropdownOpen
                               ? 'text-[#F26A21]'
@@ -234,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
                     key={item.href}
                     to={item.href}
                     className={cn(
-                      'px-2 xl:px-2.5 py-2 text-xs xl:text-[13px] 2xl:text-sm font-bold rounded-lg transition-colors duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
+                      'px-2 xl:px-2.5 2xl:px-3 py-2 text-xs xl:text-[13px] 2xl:text-sm font-bold rounded-lg transition-colors duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-[#F26A21]',
                       isTransparent
                         ? isActive
                           ? 'text-[#F26A21] bg-white/10'
@@ -263,7 +263,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
             <div
               onMouseEnter={() => handleMouseEnter('Colleges')}
               onMouseLeave={handleMouseLeave}
-              className="absolute inset-x-0 top-full z-50 px-4 sm:px-6 lg:px-8 pointer-events-auto"
+              className="absolute inset-x-0 top-full z-50 px-4 xl:px-6 pointer-events-auto"
             >
               <CollegesMegaMenu onClose={() => setActiveDropdown(null)} />
             </div>
@@ -272,7 +272,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
             <div
               onMouseEnter={() => handleMouseEnter('Programs')}
               onMouseLeave={handleMouseLeave}
-              className="absolute inset-x-0 top-full z-50 px-4 sm:px-6 lg:px-8 pointer-events-auto"
+              className="absolute inset-x-0 top-full z-50 px-4 xl:px-6 pointer-events-auto"
             >
               <ProgramsMegaMenu onClose={() => setActiveDropdown(null)} />
             </div>
