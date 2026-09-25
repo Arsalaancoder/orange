@@ -116,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
         </div>
       </div>
 
-      {/* Main Navbar Header (Strict single-row flex layout on desktop) */}
+      {/* Main Navbar Header (Strict single-row flex layout on desktop with 48px gap) */}
       <div
         ref={navRef}
         className={cn(
@@ -127,25 +127,25 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
           scrolled ? 'py-2 shadow-sm' : ''
         )}
       >
-        <div className="max-w-[1900px] mx-auto px-4 xl:px-6 flex flex-row items-center justify-between flex-nowrap gap-4 xl:gap-5 2xl:gap-6 relative min-w-0">
+        <div className="max-w-[1900px] mx-auto px-4 xl:px-6 flex flex-row items-center justify-between flex-nowrap gap-8 lg:gap-10 xl:gap-12 relative min-w-0">
           
-          {/* 1. Branding Section (Logo + College Name + Tagline) - Max Width 760px */}
-          <div className="flex items-center shrink-initial max-w-[760px] min-w-0">
+          {/* 1. Branding Section (Logo + College Name + Tagline) - flex-shrink: 0 */}
+          <div className="flex items-center shrink-0 min-w-0">
             <Link
               to="/"
-              className="flex items-center gap-2.5 sm:gap-3 group focus-visible:outline-none shrink min-w-0"
+              className="flex items-center gap-2.5 sm:gap-3 group focus-visible:outline-none shrink-0"
               aria-label="Orange Group of Nursing & Paramedical Colleges - Home"
             >
               <img
                 src="/logo.png"
                 alt="Orange Group Logo"
-                className="h-11 sm:h-13 md:h-14 xl:h-[76px] 2xl:h-[82px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] shrink-0"
+                className="h-11 sm:h-13 md:h-14 xl:h-[72px] 2xl:h-[78px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] shrink-0"
               />
               <div className="flex flex-col justify-center min-w-0">
-                <span className="font-extrabold text-[#101820] text-xs sm:text-sm md:text-base xl:text-[18px] 2xl:text-[21px] tracking-tight uppercase leading-tight font-sans whitespace-nowrap truncate">
+                <span className="font-extrabold text-[#101820] text-xs sm:text-sm md:text-base xl:text-[18px] 2xl:text-[20px] tracking-tight uppercase leading-tight font-sans whitespace-nowrap">
                   ORANGE GROUP OF NURSING & PARAMEDICAL COLLEGES
                 </span>
-                <span className="text-[11px] sm:text-xs xl:text-[14px] 2xl:text-[15px] text-[#F26A21] italic font-serif font-semibold tracking-wide mt-0.5 whitespace-nowrap">
+                <span className="text-[11px] sm:text-xs xl:text-[14px] text-[#F26A21] italic font-serif font-semibold tracking-wide mt-0.5 whitespace-nowrap">
                   In Pursuit of Excellence
                 </span>
               </div>
@@ -167,10 +167,10 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* 3. Desktop Navigation Links & CTA Container (≥ 1280px / xl breakpoint - Single Line) */}
-          <div className="hidden xl:flex items-center justify-end flex-nowrap whitespace-nowrap flex-1 shrink-0 gap-4 xl:gap-5 2xl:gap-6 min-w-0">
+          {/* 3. Desktop Navigation Links & CTA Container (≥ 1280px / xl breakpoint) */}
+          <div className="hidden xl:flex items-center justify-end flex-nowrap whitespace-nowrap flex-1 shrink-0 gap-5 xl:gap-6 2xl:gap-7 min-w-0">
             {/* Navigation Links */}
-            <nav className="flex items-center space-x-0.5 xl:space-x-1 2xl:space-x-1.5 flex-nowrap whitespace-nowrap shrink-0" aria-label="Main Navigation">
+            <nav className="flex items-center gap-3 xl:gap-4 2xl:gap-5 flex-nowrap whitespace-nowrap shrink-0" aria-label="Main Navigation">
               {mainNavigation.map((item) => {
                 const isCurrentRoute = location.pathname === item.href;
                 const isChildActive = Boolean(
@@ -249,7 +249,7 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
             </nav>
 
             {/* Desktop Action: Primary Orange Enquire Now Button */}
-            <div className="flex items-center shrink-0">
+            <div className="flex items-center shrink-0 ml-1 xl:ml-3">
               <PrimaryButton to="/admissions#enquiry" size="sm" showArrow className="h-9 xl:h-10 text-xs xl:text-sm px-4 xl:px-5 whitespace-nowrap shrink-0">
                 Enquire Now
               </PrimaryButton>
