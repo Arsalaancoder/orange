@@ -54,6 +54,21 @@ export interface GalleryItem {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api';
 
+/**
+ * Resolves a potentially-relative image URL to an absolute URL.
+ * Old gallery entries stored in D1 may have "/api/images/..." (relative),
+ * which browsers resolve against the frontend origin instead of the worker.
+ * This function ensures they always point to the correct worker domain.
+ */
+function resolveImageUrl(imageUrl?: string): string {
+  if (!imageUrl) return '';
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) return imageUrl;
+  // It's a relative path like /api/images/... — prefix with the worker base
+  const workerBase = API_BASE_URL.replace(/\/api\/?$/, '');
+  const cleanPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+  return `${workerBase}${cleanPath}`;
+}
+
 function normalizeNewsItem(item: any): NewsItem {
   return {
     ...item,
@@ -75,9 +90,11 @@ function normalizeEventItem(item: any): EventItem {
 function normalizeGalleryItem(item: any): GalleryItem {
   return {
     ...item,
+    image_url: resolveImageUrl(item.image_url),
     r2_key: item.storage_key || item.r2_key || '',
   };
 }
+
 
 // Client API Helper
 async function request<T>(endpoint: string, options: RequestInit = {}, token?: string): Promise<T> {

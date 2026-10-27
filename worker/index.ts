@@ -271,6 +271,11 @@ export default {
         const uniqueId = crypto.randomUUID();
         const storageKey = `${sanitizedFolder}/${Date.now()}_${uniqueId}.${extension}`;
 
+        // Build absolute URL using the worker's own origin so images resolve
+        // correctly regardless of which domain the frontend is served from.
+        const workerOrigin = `${url.protocol}//${url.host}`;
+        const absolutePublicUrl = `${workerOrigin}/api/images/${storageKey}`;
+
         try {
           const bucket = getR2Bucket(env);
           await bucket.put(storageKey, await file.arrayBuffer(), {
@@ -279,12 +284,10 @@ export default {
             },
           });
           console.log(`[Worker R2 Upload Success]: Stored image at key ${storageKey}`);
-          const publicUrl = `/api/images/${storageKey}`;
-          return jsonResponse({ success: true, url: publicUrl, key: storageKey, storage_key: storageKey }, 200, cors);
+          return jsonResponse({ success: true, url: absolutePublicUrl, key: storageKey, storage_key: storageKey }, 200, cors);
         } catch (err: any) {
           console.warn('[Worker R2 Put Fallback]: R2 not available, storing dummy key.');
-          const publicUrl = `/api/images/${storageKey}`;
-          return jsonResponse({ success: true, url: publicUrl, key: storageKey, storage_key: storageKey }, 200, cors);
+          return jsonResponse({ success: true, url: absolutePublicUrl, key: storageKey, storage_key: storageKey }, 200, cors);
         }
       }
 

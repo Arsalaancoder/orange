@@ -136,7 +136,8 @@ export const AdminGalleryPage: React.FC = () => {
           title: item.title,
           caption: item.caption,
           category: item.category,
-          image_url: (uploadRes.url && uploadRes.url.startsWith('http')) ? uploadRes.url : item.previewUrl,
+          image_url: uploadRes.url,
+          storage_key: uploadRes.storage_key,
           r2_key: uploadRes.key,
           display_order: galleryList.length + i + 1,
         }, token || undefined);
