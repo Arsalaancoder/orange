@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # Allow manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -28,10 +28,12 @@ jobs:
       - name: Build production bundle
         run: npm run build
         env:
-          # Auth — set in GitHub repo Settings > Secrets and variables > Actions
-          # If not set, the app still builds; public site works, admin shows config error
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-          # API endpoints
+          # VITE_CLERK_PUBLISHABLE_KEY is NOT passed here intentionally.
+          # The value in the committed .env file is used by Vite automatically.
+          # Passing it via GitHub secret would override .env with an empty string
+          # if the secret is not configured, breaking Clerk auth initialization.
+          #
+          # API endpoints — these have hardcoded fallbacks so build never fails.
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://orange-paramedical-api.orange-paramedical.workers.dev/api' }}
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://orange-paramedical-api.orange-paramedical.workers.dev/api' }}
 
@@ -40,5 +42,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: deploy
-          # Ensure wrangler uses the correct wrangler.jsonc config in project root
           workingDirectory: '.'

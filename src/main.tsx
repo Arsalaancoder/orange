@@ -7,17 +7,10 @@ import { ToastProvider } from '@/components/admin/ui/toast';
 import './index.css';
 import App from './App';
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
-
-// Warn in console but don't throw — a hard throw crashes the ENTIRE app
-// (white screen for all visitors) if the env var is ever missing in CI.
-if (!PUBLISHABLE_KEY) {
-  console.error(
-    '[Orange CMS] VITE_CLERK_PUBLISHABLE_KEY is not set. ' +
-    'Admin authentication will not work. ' +
-    'Add this env var to your Cloudflare Pages / GitHub Actions secrets.'
-  );
-}
+// VITE_CLERK_PUBLISHABLE_KEY is read from the committed .env file during build.
+// Do NOT pass it as a GitHub Actions env var unless the secret is definitely set —
+// an unset GitHub secret evaluates to "" which overrides the .env value.
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
 
 function ClerkWithRouter() {
   const navigate = useNavigate();
@@ -32,21 +25,14 @@ function ClerkWithRouter() {
     [navigate]
   );
 
-  // If the key is missing, render the app without Clerk so the public site
-  // still works. Admin routes will redirect to the login page.
-  if (!PUBLISHABLE_KEY) {
-    return (
-      <HelmetProvider>
-        <ToastProvider>
-          <App />
-        </ToastProvider>
-      </HelmetProvider>
-    );
-  }
-
+  // Always render ClerkProvider — even if the key is missing.
+  // Omitting ClerkProvider causes useAuth() to return { isLoaded: false }
+  // forever, which shows an infinite loading spinner on every admin page.
+  // When the key is missing/invalid, Clerk itself will surface an error that
+  // the ErrorBoundary (App.tsx) will catch and display clearly.
   return (
     <ClerkProvider
-      publishableKey={PUBLISHABLE_KEY}
+      publishableKey={PUBLISHABLE_KEY || 'missing-key'}
       routerPush={routerPush}
       routerReplace={routerReplace}
       signInUrl="/admin/login"
