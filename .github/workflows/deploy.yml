@@ -28,12 +28,17 @@ jobs:
       - name: Build production bundle
         run: npm run build
         env:
+          # Auth — set in GitHub repo Settings > Secrets and variables > Actions
+          # If not set, the app still builds; public site works, admin shows config error
           VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          # API endpoints
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://orange-paramedical-api.orange-paramedical.workers.dev/api' }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://orange-paramedical-api.orange-paramedical.workers.dev/api' }}
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: deploy
+          # Ensure wrangler uses the correct wrangler.jsonc config in project root
+          workingDirectory: '.'
