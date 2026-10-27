@@ -1,24 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { SignIn } from '@clerk/clerk-react';
-import { Loader2, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
   const { isLoaded, isSignedIn } = useAuth();
 
-  // If Clerk takes more than 8 seconds to initialize, it's almost certainly
-  // a configuration issue (wrong domain, missing env var, network block).
-  // Show a helpful error instead of an infinite spinner.
-  const [clerkTimeout, setClerkTimeout] = useState(false);
-  useEffect(() => {
-    if (isLoaded) return; // Clerk loaded fine — cancel timer
-    const t = setTimeout(() => setClerkTimeout(true), 8000);
-    return () => clearTimeout(t);
-  }, [isLoaded]);
-
-  // ── Clerk is still initializing ──────────────────────────────────────────
-  if (!isLoaded && !clerkTimeout) {
+  // Clerk is initialising — wait for it (no artificial timeout)
+  if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#2563EB]">
         <div className="text-center text-white space-y-3">
@@ -29,61 +19,12 @@ export const AdminLoginPage: React.FC = () => {
     );
   }
 
-  // ── Clerk timed out (misconfiguration / missing env var) ─────────────────
-  if (!isLoaded && clerkTimeout) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2563EB] p-6">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 text-center space-y-5">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center">
-            <AlertTriangle className="w-7 h-7 text-amber-500" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
-              Authentication Unavailable
-            </h2>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              The admin login could not connect to the authentication service.
-              This usually means the <strong>VITE_CLERK_PUBLISHABLE_KEY</strong> environment
-              variable is missing or this domain is not authorized in your Clerk dashboard.
-            </p>
-          </div>
-
-          <div className="bg-slate-50 rounded-xl p-4 text-left space-y-2 text-xs font-mono text-slate-600 border border-slate-200">
-            <p className="font-bold text-slate-800 font-sans text-xs uppercase tracking-wider mb-2">
-              To fix this:
-            </p>
-            <p>1. Go to your Cloudflare Pages dashboard</p>
-            <p>2. Settings → Environment Variables</p>
-            <p>3. Add <span className="text-[#F26A21] font-bold">VITE_CLERK_PUBLISHABLE_KEY</span></p>
-            <p>4. Also add it to GitHub Actions secrets</p>
-            <p>5. Redeploy the site</p>
-          </div>
-
-          <a
-            href="https://dashboard.clerk.com"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F26A21] hover:bg-[#d85813] text-white font-bold text-sm rounded-xl transition-all"
-          >
-            <span>Open Clerk Dashboard</span>
-            <ExternalLink className="w-4 h-4" />
-          </a>
-
-          <p className="text-xs text-slate-400 mt-2">
-            Public website is working normally.{' '}
-            <a href="/" className="text-[#F26A21] hover:underline font-semibold">Go to homepage →</a>
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Already signed in → redirect ─────────────────────────────────────────
+  // Already signed in → go straight to dashboard
   if (isSignedIn) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
-  // ── Clerk loaded, show the sign-in form ───────────────────────────────────
+  // Clerk loaded — show the sign-in form
   return (
     <div className="min-h-screen bg-[#2563EB] flex items-center justify-center p-4 sm:p-6 lg:p-12 relative overflow-hidden font-sans">
       {/* Background Geometric Accent Graphics */}
@@ -134,7 +75,7 @@ export const AdminLoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Side: Welcome Back Admin Form */}
+        {/* Right Side: Clerk Sign-In Form */}
         <div className="lg:col-span-6 p-8 sm:p-12 flex flex-col justify-center bg-white relative">
           <div className="flex flex-col items-center justify-center my-auto py-2">
             <SignIn
