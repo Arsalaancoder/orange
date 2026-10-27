@@ -29,18 +29,18 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Clerk (auth SDK — large, rarely changes)
+          if (!id.includes('node_modules')) return;
+          // Clerk auth SDK (large, changes independently)
           if (id.includes('@clerk')) return 'vendor-clerk';
-          // Framer Motion (animation library)
+          // Framer Motion animation library
           if (id.includes('framer-motion')) return 'vendor-framer';
-          // React + ReactDOM core
-          if (id.includes('react-dom') || id.includes('react/')) return 'vendor-react';
           // React Router
           if (id.includes('react-router')) return 'vendor-router';
-          // Lucide icons
+          // Lucide icons (tree-shaken per page)
           if (id.includes('lucide-react')) return 'vendor-lucide';
-          // All other node_modules
-          if (id.includes('node_modules')) return 'vendor-misc';
+          // Everything else in node_modules into one cached vendor bundle
+          // (avoids circular dependency between react-dom and misc)
+          return 'vendor';
         },
       },
     },
