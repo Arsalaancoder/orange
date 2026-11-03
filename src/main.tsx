@@ -7,9 +7,6 @@ import { ToastProvider } from '@/components/admin/ui/toast';
 import './index.css';
 import App from './App';
 
-// VITE_CLERK_PUBLISHABLE_KEY is read from the committed .env file during build.
-// Do NOT pass it as a GitHub Actions env var unless the secret is definitely set —
-// an unset GitHub secret evaluates to "" which overrides the .env value.
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
 
 function ClerkWithRouter() {
@@ -25,11 +22,6 @@ function ClerkWithRouter() {
     [navigate]
   );
 
-  // Always render ClerkProvider — even if the key is missing.
-  // Omitting ClerkProvider causes useAuth() to return { isLoaded: false }
-  // forever, which shows an infinite loading spinner on every admin page.
-  // When the key is missing/invalid, Clerk itself will surface an error that
-  // the ErrorBoundary (App.tsx) will catch and display clearly.
   return (
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY || 'missing-key'}

@@ -28,10 +28,9 @@ jobs:
       - name: Build production bundle
         run: npm run build
         env:
-          # VITE_CLERK_PUBLISHABLE_KEY is NOT passed here intentionally.
-          # The value in the committed .env file is used by Vite automatically.
-          # Passing it via GitHub secret would override .env with an empty string
-          # if the secret is not configured, breaking Clerk auth initialization.
+          # Configure this repository secret with the production Clerk publishable key.
+          # Do not fall back to a committed development/test key for production.
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
           #
           # API endpoints — these have hardcoded fallbacks so build never fails.
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://orange-paramedical-api.orange-paramedical.workers.dev/api' }}

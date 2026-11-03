@@ -1,13 +1,42 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { SignIn } from '@clerk/clerk-react';
-import { Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
   const { isLoaded, isSignedIn } = useAuth();
+  const [timedOut, setTimedOut] = useState(false);
 
-  // Clerk is initialising — wait for it (no artificial timeout)
+  useEffect(() => {
+    if (isLoaded) {
+      setTimedOut(false);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setTimedOut(true), 30000);
+    return () => window.clearTimeout(timeout);
+  }, [isLoaded]);
+
+  if (!isLoaded && timedOut) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#2563EB] p-6">
+        <div role="alert" className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 text-center space-y-4">
+          <AlertTriangle className="w-10 h-10 mx-auto text-amber-500" />
+          <h1 className="text-xl font-extrabold text-slate-900">Administrator sign-in is unavailable</h1>
+          <p className="text-sm text-slate-600">The authentication service did not finish loading. Check your connection and try again. If this continues, contact the site administrator.</p>
+          <button
+            type="button"
+            onClick={() => { setTimedOut(false); window.location.reload(); }}
+            className="px-5 py-2.5 bg-[#F26A21] hover:bg-[#d85813] text-white font-bold text-sm rounded-xl"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#2563EB]">
