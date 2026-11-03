@@ -97,14 +97,11 @@ function normalizeGalleryItem(item: any): GalleryItem {
 
 
 // Client API Helper
-async function request<T>(endpoint: string, options: RequestInit = {}, token?: string): Promise<T> {
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
 
   const cleanBase = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -113,6 +110,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}, token?: s
   const response = await fetch(url, {
     ...options,
     headers,
+    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -167,12 +165,12 @@ export const api = {
   },
 
   // --- ADMIN NEWS ---
-  async getAdminNews(token?: string): Promise<NewsItem[]> {
-    const res = await request<{ data: NewsItem[] }>('/admin/news', {}, token);
+  async getAdminNews(): Promise<NewsItem[]> {
+    const res = await request<{ data: NewsItem[] }>('/admin/news', {});
     return res.data.map(normalizeNewsItem);
   },
 
-  async createNews(data: Partial<NewsItem>, token?: string): Promise<NewsItem> {
+  async createNews(data: Partial<NewsItem>): Promise<NewsItem> {
     const payload = {
       ...data,
       short_description: data.short_description || '',
@@ -186,7 +184,7 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    }, token);
+    });
 
     return normalizeNewsItem({
       id: res.id,
@@ -200,7 +198,7 @@ export const api = {
     });
   },
 
-  async updateNews(id: string, data: Partial<NewsItem>, token?: string): Promise<void> {
+  async updateNews(id: string, data: Partial<NewsItem>): Promise<void> {
     const payload = {
       ...data,
       short_description: data.short_description || '',
@@ -214,20 +212,20 @@ export const api = {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    }, token);
+    });
   },
 
-  async deleteNews(id: string, token?: string): Promise<void> {
-    await request(`/admin/news/${id}`, { method: 'DELETE' }, token);
+  async deleteNews(id: string): Promise<void> {
+    await request(`/admin/news/${id}`, { method: 'DELETE' });
   },
 
   // --- ADMIN EVENTS ---
-  async getAdminEvents(token?: string): Promise<EventItem[]> {
-    const res = await request<{ data: EventItem[] }>('/admin/events', {}, token);
+  async getAdminEvents(): Promise<EventItem[]> {
+    const res = await request<{ data: EventItem[] }>('/admin/events', {});
     return res.data.map(normalizeEventItem);
   },
 
-  async createEvent(data: Partial<EventItem>, token?: string): Promise<EventItem> {
+  async createEvent(data: Partial<EventItem>): Promise<EventItem> {
     const payload = {
       ...data,
       short_description: data.short_description || '',
@@ -240,7 +238,7 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    }, token);
+    });
 
     return normalizeEventItem({
       id: res.id,
@@ -256,7 +254,7 @@ export const api = {
     });
   },
 
-  async updateEvent(id: string, data: Partial<EventItem>, token?: string): Promise<void> {
+  async updateEvent(id: string, data: Partial<EventItem>): Promise<void> {
     const payload = {
       ...data,
       short_description: data.short_description || '',
@@ -269,20 +267,20 @@ export const api = {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    }, token);
+    });
   },
 
-  async deleteEvent(id: string, token?: string): Promise<void> {
-    await request(`/admin/events/${id}`, { method: 'DELETE' }, token);
+  async deleteEvent(id: string): Promise<void> {
+    await request(`/admin/events/${id}`, { method: 'DELETE' });
   },
 
   // --- ADMIN GALLERY & R2 UPLOAD ---
-  async getAdminGallery(token?: string): Promise<GalleryItem[]> {
-    const res = await request<{ data: GalleryItem[] }>('/admin/gallery', {}, token);
+  async getAdminGallery(): Promise<GalleryItem[]> {
+    const res = await request<{ data: GalleryItem[] }>('/admin/gallery', {});
     return res.data.map(normalizeGalleryItem);
   },
 
-  async uploadImage(file: File, folder: string, token?: string): Promise<{ url: string; key: string; storage_key: string }> {
+  async uploadImage(file: File, folder: string): Promise<{ url: string; key: string; storage_key: string }> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('folder', folder);
@@ -290,14 +288,14 @@ export const api = {
     const res = await request<{ success: boolean; url: string; key: string; storage_key?: string }>('/admin/upload', {
       method: 'POST',
       body: formData,
-    }, token);
+    });
 
     const fullUrl = res.url.startsWith('http') ? res.url : res.url;
     const storageKey = res.storage_key || res.key;
     return { url: fullUrl, key: storageKey, storage_key: storageKey };
   },
 
-  async createGalleryItem(data: Partial<GalleryItem>, token?: string): Promise<GalleryItem> {
+  async createGalleryItem(data: Partial<GalleryItem>): Promise<GalleryItem> {
     const payload = {
       ...data,
       image_url: data.image_url || '',
@@ -308,7 +306,7 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    }, token);
+    });
 
     return normalizeGalleryItem({
       id: res.id,
@@ -321,23 +319,23 @@ export const api = {
     });
   },
 
-  async updateGalleryItem(id: string, data: Partial<GalleryItem>, token?: string): Promise<void> {
+  async updateGalleryItem(id: string, data: Partial<GalleryItem>): Promise<void> {
     await request(`/admin/gallery/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    }, token);
+    });
   },
 
-  async reorderGallery(items: Array<{ id: string; display_order: number }>, token?: string): Promise<void> {
+  async reorderGallery(items: Array<{ id: string; display_order: number }>): Promise<void> {
     await request('/admin/gallery/reorder', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items }),
-    }, token);
+    });
   },
 
-  async deleteGalleryItem(id: string, token?: string): Promise<void> {
-    await request(`/admin/gallery/${id}`, { method: 'DELETE' }, token);
+  async deleteGalleryItem(id: string): Promise<void> {
+    await request(`/admin/gallery/${id}`, { method: 'DELETE' });
   },
 };

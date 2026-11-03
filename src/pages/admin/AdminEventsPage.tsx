@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import { api } from '@/services/api';
 import type { EventItem } from '@/services/api';
 import { Card } from '@/components/admin/ui/card';
@@ -24,7 +23,6 @@ import { motion } from 'framer-motion';
 import { softPopUpVariant } from '@/lib/motionVariants';
 
 export const AdminEventsPage: React.FC = () => {
-  const { getToken } = useAuth();
   const toast = useToast();
   const [eventsList, setEventsList] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,8 +57,7 @@ export const AdminEventsPage: React.FC = () => {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const token = await getToken();
-      const data = await api.getAdminEvents(token || undefined);
+      const data = await api.getAdminEvents();
       setEventsList(data);
     } catch (err) {
       toast.error('Failed to load events', 'Could not fetch events.');
@@ -128,9 +125,8 @@ export const AdminEventsPage: React.FC = () => {
 
     setUploading(true);
     try {
-      const token = await getToken();
       const compressed = await compressImage(file, { maxWidth: 1600, quality: 0.85 });
-      const res = await api.uploadImage(compressed.file, 'events', token || undefined);
+      const res = await api.uploadImage(compressed.file, 'events');
       setFormImage(res.url);
       setFormR2Key(res.key);
       toast.success('Event Image Uploaded', 'Event banner saved successfully.');
@@ -150,7 +146,6 @@ export const AdminEventsPage: React.FC = () => {
 
     setSaving(true);
     try {
-      const token = await getToken();
       const payload: Partial<EventItem> = {
         title: formTitle,
         slug: formSlug || formTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -166,10 +161,10 @@ export const AdminEventsPage: React.FC = () => {
       };
 
       if (editingItem) {
-        await api.updateEvent(editingItem.id, payload, token || undefined);
+        await api.updateEvent(editingItem.id, payload);
         toast.success('Event Updated', 'Event details updated successfully.');
       } else {
-        await api.createEvent(payload, token || undefined);
+        await api.createEvent(payload);
         toast.success('Event Scheduled', 'New workshop event saved successfully.');
       }
 
@@ -186,8 +181,7 @@ export const AdminEventsPage: React.FC = () => {
     if (!deletingId) return;
     setIsDeleting(true);
     try {
-      const token = await getToken();
-      await api.deleteEvent(deletingId, token || undefined);
+      await api.deleteEvent(deletingId);
       toast.success('Event Removed', 'Event deleted successfully.');
       setDeletingId(null);
       fetchEvents();

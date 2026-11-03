@@ -1,25 +1,37 @@
-// Cloudflare Worker API for Orange Paramedical CMS
-// Connects React frontend with Cloudflare D1 Database & R2 Storage Bucket with server-side Clerk JWT validation
+// Cloudflare Worker API for Orange Paramedical CMS and Better Auth.
+import { createAuth, type AuthEnv } from './auth';
 
 export interface Env {
   DB: D1Database;
   MEDIA?: R2Bucket;
   BUCKET?: R2Bucket;
-  CLERK_SECRET_KEY?: string;
-  CLERK_ISSUER?: string;
+  BETTER_AUTH_SECRET?: string;
+  BETTER_AUTH_URL?: string;
+  AUTH_TRUSTED_ORIGINS?: string;
+  BOOTSTRAP_ADMIN_CODE?: string;
 }
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
 
-function corsHeaders(request: Request): Record<string, string> {
-  const origin = request.headers.get('Origin') || '*';
-  return {
-    'Access-Control-Allow-Origin': origin,
+function corsHeaders(request: Request, env?: Env): Record<string, string> {
+  const origin = request.headers.get('Origin');
+  const configuredOrigins = (env?.AUTH_TRUSTED_ORIGINS || '')
+    .split(',').map((value) => value.trim()).filter(Boolean);
+  const allowedOrigins = configuredOrigins.length ? configuredOrigins : [
+    'https://orangecolleges.com',
+    'https://www.orangecolleges.com',
+    'http://localhost:5173',
+  ];
+  const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Requested-With',
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
   };
+  if (origin && allowedOrigins.includes(origin)) headers['Access-Control-Allow-Origin'] = origin;
+  return headers;
 }
 
 function jsonResponse(data: unknown, status = 200, headers: Record<string, string> = {}) {
@@ -37,6 +49,77 @@ function errorResponse(message: string, status = 400, headers: Record<string, st
   return jsonResponse({ error: message, success: false }, status, headers);
 }
 
+async function matchesSecret(provided: string, expected: string): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const [providedHash, expectedHash] = await Promise.all([
+    crypto.subtle.digest('SHA-256', encoder.encode(provided)),
+    crypto.subtle.digest('SHA-256', encoder.encode(expected)),
+  ]);
+  const left = new Uint8Array(providedHash);
+  const right = new Uint8Array(expectedHash);
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) difference |= left[index] ^ right[index];
+  return difference === 0;
+}
+
+async function bootstrapFirstAdmin(request: Request, env: Env, cors: Record<string, string>): Promise<Response> {
+  const code = env.BOOTSTRAP_ADMIN_CODE;
+  if (!code || code.length < 32) return errorResponse('Initial administrator setup is not enabled.', 404, cors);
+
+  let payload: { setupCode?: unknown; name?: unknown; email?: unknown; password?: unknown };
+  try {
+    payload = await request.json() as typeof payload;
+  } catch {
+    return errorResponse('Invalid setup request.', 400, cors);
+  }
+  if (typeof payload.setupCode !== 'string' || !await matchesSecret(payload.setupCode, code)) {
+    return errorResponse('Setup code is invalid or setup is unavailable.', 403, cors);
+  }
+
+  const existingAdmin = await env.DB.prepare("SELECT id FROM user WHERE role = 'admin' LIMIT 1").first();
+  if (existingAdmin) return errorResponse('Initial administrator setup is already complete.', 409, cors);
+  if (typeof payload.name !== 'string' || typeof payload.email !== 'string' || typeof payload.password !== 'string') {
+    return errorResponse('Name, email, and password are required.', 400, cors);
+  }
+
+  const auth = createAuth(env as Env & AuthEnv, true);
+  const signupUrl = new URL('/api/auth/sign-up/email', request.url);
+  const signupHeaders = new Headers(request.headers);
+  signupHeaders.delete('content-length');
+  const signupResponse = await auth.handler(new Request(signupUrl, {
+    method: 'POST',
+    headers: signupHeaders,
+    body: JSON.stringify({ name: payload.name, email: payload.email, password: payload.password }),
+  }));
+  if (!signupResponse.ok) {
+    const headers = new Headers(signupResponse.headers);
+    for (const [key, value] of Object.entries(cors)) headers.set(key, value);
+    return new Response(signupResponse.body, { status: signupResponse.status, statusText: signupResponse.statusText, headers });
+  }
+
+  const result = await signupResponse.json() as { user?: { id?: unknown; role?: unknown } };
+  const userId = result.user?.id;
+  if (typeof userId !== 'string') return errorResponse('Could not complete administrator setup.', 500, cors);
+
+  // This conditional update is atomic in D1. If two valid setup requests race,
+  // only one account can become the first administrator.
+  const promoted = await env.DB.prepare(
+    "UPDATE user SET role = 'admin' WHERE id = ? AND NOT EXISTS (SELECT 1 FROM user WHERE role = 'admin' AND id <> ?)"
+  ).bind(userId, userId).run();
+  if (promoted.meta.changes !== 1) {
+    return errorResponse('Initial administrator setup was completed by another request. Sign in with the created account if it is yours.', 409, cors);
+  }
+
+  const headers = new Headers(signupResponse.headers);
+  for (const [key, value] of Object.entries(cors)) headers.set(key, value);
+  headers.delete('content-length');
+  return new Response(JSON.stringify({ ...result, user: { ...result.user, role: 'admin' } }), {
+    status: signupResponse.status,
+    statusText: signupResponse.statusText,
+    headers,
+  });
+}
+
 function getR2Bucket(env: Env): R2Bucket {
   const bucket = env.MEDIA || env.BUCKET;
   if (!bucket) {
@@ -45,40 +128,9 @@ function getR2Bucket(env: Env): R2Bucket {
   return bucket;
 }
 
-async function verifyClerkAuth(request: Request, env: Env): Promise<boolean> {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.warn('[Worker Auth]: Missing or malformed Authorization header');
-    return false;
-  }
-  const token = authHeader.substring(7).trim();
-  if (!token) return false;
-
-  if (env.CLERK_SECRET_KEY || env.CLERK_ISSUER) {
-    try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1]));
-        const now = Math.floor(Date.now() / 1000);
-        if (payload.exp && payload.exp < now) {
-          console.warn('[Worker Auth]: Expired Clerk JWT token');
-          return false;
-        }
-      }
-      return true;
-    } catch {
-      console.error('[Worker Auth]: Failed to decode Clerk JWT payload');
-      return true;
-    }
-  }
-
-  return token.length > 5;
-}
-
 async function ensureTablesExist(db: D1Database) {
-  try {
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS news (
+  const statements = [
+    `CREATE TABLE IF NOT EXISTS news (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         slug TEXT UNIQUE NOT NULL,
@@ -89,9 +141,8 @@ async function ensureTablesExist(db: D1Database) {
         published_at TEXT NOT NULL DEFAULT (datetime('now')),
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-
-      CREATE TABLE IF NOT EXISTS events (
+      )`,
+    `CREATE TABLE IF NOT EXISTS events (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         slug TEXT UNIQUE NOT NULL,
@@ -105,9 +156,8 @@ async function ensureTablesExist(db: D1Database) {
         status TEXT NOT NULL DEFAULT 'upcoming',
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-
-      CREATE TABLE IF NOT EXISTS gallery (
+      )`,
+    `CREATE TABLE IF NOT EXISTS gallery (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         caption TEXT NOT NULL DEFAULT '',
@@ -116,14 +166,13 @@ async function ensureTablesExist(db: D1Database) {
         storage_key TEXT NOT NULL DEFAULT '',
         display_order INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_news_slug ON news(slug);
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_events_slug ON events(slug);
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_gallery_storage_key ON gallery(storage_key);
-    `);
-  } catch (err) {
-    console.error('[Worker DB Init Error]:', err);
+      )`,
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_news_slug ON news(slug)',
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_events_slug ON events(slug)',
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_gallery_storage_key ON gallery(storage_key)',
+  ];
+  for (const statement of statements) {
+    await db.prepare(statement).run();
   }
 }
 
@@ -131,7 +180,7 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const method = request.method;
-    const cors = corsHeaders(request);
+    const cors = corsHeaders(request, env);
 
     console.log(`[Worker Request] ${method} ${url.pathname}${url.search}`);
 
@@ -140,7 +189,36 @@ export default {
     }
 
     try {
+      // Better Auth owns its CSRF checks, origin validation, and HttpOnly session cookies.
+      if (url.pathname.startsWith('/api/auth/')) {
+        if (url.pathname === '/api/auth/bootstrap-admin' && method === 'POST') {
+          return await bootstrapFirstAdmin(request, env, cors);
+        }
+        const auth = createAuth(env as Env & AuthEnv);
+        const response = await auth.handler(request);
+        const headers = new Headers(response.headers);
+        for (const [key, value] of Object.entries(cors)) headers.set(key, value);
+        return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+      }
+
       await ensureTablesExist(env.DB);
+
+      // All CMS endpoints require a real Better Auth database session and admin role.
+      // Frontend checks are only for navigation; this server check protects every operation.
+      if (url.pathname.startsWith('/api/admin/')) {
+        const auth = createAuth(env as Env & AuthEnv);
+        const session = await auth.api.getSession({ headers: request.headers });
+        if (!session) return errorResponse('Authentication required', 401, cors);
+        if (url.pathname === '/api/admin/session' && method === 'GET') {
+          const headers = new Headers(cors);
+          headers.set('Content-Type', 'application/json');
+          return new Response(JSON.stringify({
+            success: true,
+            data: { id: session.user.id, name: session.user.name, email: session.user.email, role: session.user.role },
+          }), { status: 200, headers });
+        }
+        if (session.user.role !== 'admin') return errorResponse('Administrator access required', 403, cors);
+      }
 
       // ----------------------------------------------------
       // 1. R2 IMAGE SERVING (/api/images/*)
@@ -219,36 +297,23 @@ export default {
       // 3. ADMIN READ ENDPOINTS
       // ----------------------------------------------------
       if (method === 'GET' && url.pathname === '/api/admin/news') {
-        const isAuth = await verifyClerkAuth(request, env);
-        if (!isAuth) return errorResponse('Unauthorized access', 401, cors);
         const { results } = await env.DB.prepare('SELECT * FROM news ORDER BY datetime(created_at) DESC').all();
         return jsonResponse({ success: true, data: results }, 200, cors);
       }
 
       if (method === 'GET' && url.pathname === '/api/admin/events') {
-        const isAuth = await verifyClerkAuth(request, env);
-        if (!isAuth) return errorResponse('Unauthorized access', 401, cors);
         const { results } = await env.DB.prepare('SELECT * FROM events ORDER BY event_date DESC').all();
         return jsonResponse({ success: true, data: results }, 200, cors);
       }
 
       if (method === 'GET' && url.pathname === '/api/admin/gallery') {
-        const isAuth = await verifyClerkAuth(request, env);
-        if (!isAuth) return errorResponse('Unauthorized access', 401, cors);
         const { results } = await env.DB.prepare('SELECT * FROM gallery ORDER BY display_order ASC').all();
         return jsonResponse({ success: true, data: results }, 200, cors);
       }
 
       // ----------------------------------------------------
-      // 4. ADMIN MUTATION ENDPOINTS (Server-Side Clerk Token Verification)
+      // 4. ADMIN MUTATION ENDPOINTS (server-side Better Auth role check above)
       // ----------------------------------------------------
-      if (['POST', 'PUT', 'DELETE'].includes(method) && url.pathname.startsWith('/api/admin/')) {
-        const isAuth = await verifyClerkAuth(request, env);
-        if (!isAuth) {
-          console.warn(`[Worker Auth Denied]: ${method} ${url.pathname}`);
-          return errorResponse('Unauthorized: Valid Clerk administrator session required', 401, cors);
-        }
-      }
 
       // POST /api/admin/upload - Image upload to R2
       if (method === 'POST' && url.pathname === '/api/admin/upload') {

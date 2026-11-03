@@ -1,0 +1,26 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "orange-paramedical-api",
+  "main": "./index.ts",
+  "compatibility_date": "2026-09-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "api.orangecolleges.com", "custom_domain": true }
+  ],
+  "vars": {
+    "BETTER_AUTH_URL": "https://api.orangecolleges.com",
+    "AUTH_TRUSTED_ORIGINS": "https://orangecolleges.com,https://www.orangecolleges.com,http://localhost:5173"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "orange-paramedical-db",
+      "database_id": "18eb960e-83e3-49e3-a59a-f8be6007d1b6",
+      "migrations_dir": "./migrations"
+    }
+  ],
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "orange-paramedical-media" }
+  ]
+}

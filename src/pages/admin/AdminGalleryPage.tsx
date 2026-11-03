@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import { api } from '@/services/api';
 import type { GalleryItem } from '@/services/api';
 import { Card } from '@/components/admin/ui/card';
@@ -37,7 +36,6 @@ interface PendingUpload {
 }
 
 export const AdminGalleryPage: React.FC = () => {
-  const { getToken } = useAuth();
   const toast = useToast();
   const [galleryList, setGalleryList] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,8 +59,7 @@ export const AdminGalleryPage: React.FC = () => {
   const fetchGallery = async () => {
     setLoading(true);
     try {
-      const token = await getToken();
-      const data = await api.getAdminGallery(token || undefined);
+      const data = await api.getAdminGallery();
       setGalleryList(data);
     } catch (err) {
       toast.error('Failed to load gallery', 'Could not fetch photos.');
@@ -128,9 +125,8 @@ export const AdminGalleryPage: React.FC = () => {
       );
 
       try {
-        const token = await getToken();
         const folderKey = `gallery/${item.category}`;
-        const uploadRes = await api.uploadImage(item.compressedFile, folderKey, token || undefined);
+        const uploadRes = await api.uploadImage(item.compressedFile, folderKey);
 
         await api.createGalleryItem({
           title: item.title,
@@ -140,7 +136,7 @@ export const AdminGalleryPage: React.FC = () => {
           storage_key: uploadRes.storage_key,
           r2_key: uploadRes.key,
           display_order: galleryList.length + i + 1,
-        }, token || undefined);
+        });
 
         completedCount++;
         setUploadProgress(Math.round((completedCount / total) * 100));
@@ -189,8 +185,7 @@ export const AdminGalleryPage: React.FC = () => {
 
     setGalleryList(newList);
     try {
-      const token = await getToken();
-      await api.reorderGallery(updatedOrder, token || undefined);
+      await api.reorderGallery(updatedOrder);
       toast.success('Order Updated', 'Gallery sequence updated.');
     } catch {
       toast.error('Reorder Error', 'Failed to update order.');
@@ -207,12 +202,11 @@ export const AdminGalleryPage: React.FC = () => {
   const handleSaveEdit = async () => {
     if (!editingItem) return;
     try {
-      const token = await getToken();
       await api.updateGalleryItem(editingItem.id, {
         title: editTitle,
         caption: editCaption,
         category: editCategory,
-      }, token || undefined);
+      });
       toast.success('Photo Updated', 'Gallery photo details updated.');
       setEditingItem(null);
       fetchGallery();
@@ -225,8 +219,7 @@ export const AdminGalleryPage: React.FC = () => {
     if (!deletingId) return;
     setIsDeleting(true);
     try {
-      const token = await getToken();
-      await api.deleteGalleryItem(deletingId, token || undefined);
+      await api.deleteGalleryItem(deletingId);
       toast.success('Photo Deleted', 'Gallery photo removed successfully.');
       setDeletingId(null);
       fetchGallery();

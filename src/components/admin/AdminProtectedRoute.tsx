@@ -1,15 +1,15 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
+import { useAdminAuth } from '@/auth/useAdminAuth';
 
 interface Props {
   children: React.ReactNode;
 }
 
 export function AdminProtectedRoute({ children }: Props) {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, isAdmin, error } = useAdminAuth();
 
-  // Clerk is still initialising — show branded spinner; no artificial timeout
+  // Wait for the Better Auth session lookup before deciding access.
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
@@ -27,8 +27,16 @@ export function AdminProtectedRoute({ children }: Props) {
     );
   }
 
+  if (error) {
+    return <div role="alert" className="min-h-screen flex items-center justify-center p-6 text-center text-slate-700">Unable to verify the administrator session. Check the API connection and try again.</div>;
+  }
+
   if (!isSignedIn) {
     return <Navigate to="/admin/login" replace />;
+  }
+
+  if (!isAdmin) {
+    return <div role="alert" className="min-h-screen flex items-center justify-center p-6 text-center text-slate-700">This account is not authorized to access the administrator portal.</div>;
   }
 
   return <>{children}</>;

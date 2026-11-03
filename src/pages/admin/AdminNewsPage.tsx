@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import { api } from '@/services/api';
 import type { NewsItem } from '@/services/api';
 import { Card } from '@/components/admin/ui/card';
@@ -24,7 +23,6 @@ import { motion } from 'framer-motion';
 import { softPopUpVariant } from '@/lib/motionVariants';
 
 export const AdminNewsPage: React.FC = () => {
-  const { getToken } = useAuth();
   const toast = useToast();
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,8 +55,7 @@ export const AdminNewsPage: React.FC = () => {
   const fetchNews = async () => {
     setLoading(true);
     try {
-      const token = await getToken();
-      const data = await api.getAdminNews(token || undefined);
+      const data = await api.getAdminNews();
       setNewsList(data);
     } catch (err) {
       toast.error('Failed to load news', 'Could not fetch news articles.');
@@ -128,9 +125,8 @@ export const AdminNewsPage: React.FC = () => {
       setFormImage(dataUrl);
 
       try {
-        const token = await getToken();
         const compressed = await compressImage(file, { maxWidth: 1600, quality: 0.85 });
-        const res = await api.uploadImage(compressed.file, 'news', token || undefined);
+        const res = await api.uploadImage(compressed.file, 'news');
         if (res.url && res.url.startsWith('http')) {
           setFormImage(res.url);
         }
@@ -158,7 +154,6 @@ export const AdminNewsPage: React.FC = () => {
 
     setSaving(true);
     try {
-      const token = await getToken();
       const payload: Partial<NewsItem> = {
         title: formTitle,
         slug: formSlug || formTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -172,10 +167,10 @@ export const AdminNewsPage: React.FC = () => {
       };
 
       if (editingItem) {
-        await api.updateNews(editingItem.id, payload, token || undefined);
+        await api.updateNews(editingItem.id, payload);
         toast.success('Article Updated', 'News article was updated successfully.');
       } else {
-        await api.createNews(payload, token || undefined);
+        await api.createNews(payload);
         toast.success('Article Published', 'New article added successfully.');
       }
 
@@ -192,8 +187,7 @@ export const AdminNewsPage: React.FC = () => {
     if (!deletingId) return;
     setIsDeleting(true);
     try {
-      const token = await getToken();
-      await api.deleteNews(deletingId, token || undefined);
+      await api.deleteNews(deletingId);
       toast.success('Article Deleted', 'News article removed successfully.');
       setDeletingId(null);
       fetchNews();

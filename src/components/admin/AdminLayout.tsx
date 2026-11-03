@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useUser, useClerk } from '@clerk/clerk-react';
 import {
   LayoutDashboard,
   Newspaper,
@@ -15,10 +14,11 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/admin/ui/toast';
 import { ConfirmDialog } from '@/components/admin/ui/dialog';
+import { useAdminAuth } from '@/auth/useAdminAuth';
+import { authClient } from '@/auth/authClient';
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useUser();
-  const { signOut } = useClerk();
+  const { user } = useAdminAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
@@ -35,7 +35,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const handleLogout = async () => {
     try {
-      await signOut();
+      await authClient.signOut();
       toast.success('Logged out', 'You have signed out of the administrator portal.');
       navigate('/admin/login');
     } catch {

@@ -1,59 +1,66 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
-import { SignIn } from '@clerk/clerk-react';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { AlertTriangle, Eye, EyeOff, Loader2, LockKeyhole } from 'lucide-react';
+import { authClient } from '@/auth/authClient';
 
 export const AdminLoginPage: React.FC = () => {
-  const { isLoaded, isSignedIn } = useAuth();
-  const [timedOut, setTimedOut] = useState(false);
+  const { data: session, isPending } = authClient.useSession();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [setupCode, setSetupCode] = useState('');
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (isLoaded) {
-      setTimedOut(false);
-      return;
-    }
-
-    const timeout = window.setTimeout(() => setTimedOut(true), 30000);
-    return () => window.clearTimeout(timeout);
-  }, [isLoaded]);
-
-  if (!isLoaded && timedOut) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2563EB] p-6">
-        <div role="alert" className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 text-center space-y-4">
-          <AlertTriangle className="w-10 h-10 mx-auto text-amber-500" />
-          <h1 className="text-xl font-extrabold text-slate-900">Administrator sign-in is unavailable</h1>
-          <p className="text-sm text-slate-600">The authentication service did not finish loading. Check your connection and try again. If this continues, contact the site administrator.</p>
-          <button
-            type="button"
-            onClick={() => { setTimedOut(false); window.location.reload(); }}
-            className="px-5 py-2.5 bg-[#F26A21] hover:bg-[#d85813] text-white font-bold text-sm rounded-xl"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2563EB]">
-        <div className="text-center text-white space-y-3">
-          <Loader2 className="w-10 h-10 animate-spin mx-auto text-white" />
-          <p className="text-sm font-semibold tracking-wide">Loading Administrator Portal...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Already signed in → go straight to dashboard
-  if (isSignedIn) {
+  if (!isPending && session?.user.role === 'admin') {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
-  // Clerk loaded — show the sign-in form
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+    try {
+      if (isCreatingAccount) {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api'}/auth/bootstrap-admin`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name.trim(), email: email.trim(), password, setupCode }),
+        });
+        const data = await response.json() as { message?: string; error?: string; user?: { role?: string } };
+        if (!response.ok) throw new Error(data.message || data.error || 'Administrator setup could not be completed.');
+        if (data.user?.role !== 'admin') throw new Error('Administrator setup could not be verified. Please sign in.');
+        await authClient.getSession();
+        navigate('/admin/dashboard', { replace: true });
+        return;
+      }
+
+      const result = await authClient.signIn.email({ email: email.trim(), password, callbackURL: '/admin/dashboard' });
+      if (result.error) {
+        const status = Number(result.error.status);
+        if (status === 401) throw new Error('Invalid email or password.');
+        if (status >= 500) throw new Error('The authentication service is unavailable. Please try again shortly.');
+        throw new Error('Sign-in could not be completed. Check the information and try again.');
+      }
+      if (result.data?.user.role !== 'admin') {
+        await authClient.signOut();
+        throw new Error('This account is not authorized to access the administrator portal.');
+      }
+      navigate('/admin/dashboard', { replace: true });
+    } catch (cause) {
+      setError(cause instanceof TypeError
+        ? 'Unable to reach the authentication service. Check your connection and try again.'
+        : cause instanceof Error ? cause.message : 'Unable to sign in. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Render the existing administrator sign-in layout.
   return (
     <div className="min-h-screen bg-[#2563EB] flex items-center justify-center p-4 sm:p-6 lg:p-12 relative overflow-hidden font-sans">
       {/* Background Geometric Accent Graphics */}
@@ -104,15 +111,42 @@ export const AdminLoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Side: Clerk Sign-In Form */}
+        {/* Right Side: Administrator Sign-In Form */}
         <div className="lg:col-span-6 p-8 sm:p-12 flex flex-col justify-center bg-white relative">
-          <div className="flex flex-col items-center justify-center my-auto py-2">
-            <SignIn
-              routing="path"
-              path="/admin/login"
-              forceRedirectUrl="/admin/dashboard"
-              withSignUp={false}
-            />
+          <div className="w-full max-w-sm mx-auto py-2">
+            <div className="mb-8 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-[#F26A21]"><LockKeyhole className="h-7 w-7" /></div>
+              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">Administrator Sign In</h2>
+              <p className="mt-2 text-sm text-slate-500">{isCreatingAccount ? 'Create the first administrator account with your one-time setup code.' : 'Use your administrator account.'}</p>
+            </div>
+            {isPending && <p className="mb-4 flex items-center justify-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Checking existing session…</p>}
+            {error && <div role="alert" className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />{error}</div>}
+            <form onSubmit={submit} className="space-y-5">
+              {isCreatingAccount && <>
+                <label className="block text-sm font-semibold text-slate-700">Administrator name
+                  <input required autoComplete="name" value={name} onChange={(event) => { setName(event.target.value); setError(''); }} className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100" />
+                </label>
+                <label className="block text-sm font-semibold text-slate-700">One-time setup code
+                  <input required type="password" autoComplete="off" value={setupCode} onChange={(event) => { setSetupCode(event.target.value); setError(''); }} className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100" />
+                </label>
+              </>}
+              <label className="block text-sm font-semibold text-slate-700">Email address
+                <input required type="email" autoComplete="username" value={email} onChange={(event) => { setEmail(event.target.value); setError(''); }} className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100" />
+              </label>
+              <label className="block text-sm font-semibold text-slate-700">Password
+                <span className="relative mt-2 block">
+                  <input required minLength={12} type={showPassword ? 'text' : 'password'} autoComplete={isCreatingAccount ? 'new-password' : 'current-password'} value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 font-normal outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100" />
+                  <button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword((value) => !value)} className="absolute inset-y-0 right-3 text-slate-500 hover:text-slate-800">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button>
+                </span>
+              </label>
+              <button disabled={isSubmitting} type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F26A21] px-5 py-3 font-bold text-white transition hover:bg-[#d85813] disabled:cursor-not-allowed disabled:opacity-60">
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}{isSubmitting ? 'Signing in…' : 'Sign In'}
+              </button>
+              {isCreatingAccount && <p className="text-center text-xs text-slate-500">This setup is available only once. The setup code is checked by the server and never grants a second administrator.</p>}
+            </form>
+            <button type="button" onClick={() => { setIsCreatingAccount((value) => !value); setError(''); }} className="mt-4 w-full text-center text-sm font-semibold text-[#1E3A8A] hover:underline">
+              {isCreatingAccount ? 'Already created the account? Sign in' : 'First time here? Create the initial admin account'}
+            </button>
           </div>
         </div>
       </div>
