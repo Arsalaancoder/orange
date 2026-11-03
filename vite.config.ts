@@ -8,8 +8,23 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const publishableKey = process.env.VITE_CLERK_PUBLISHABLE_KEY ?? env.VITE_CLERK_PUBLISHABLE_KEY;
 
-  if (mode === 'production' && (!publishableKey || publishableKey.startsWith('pk_test_'))) {
-    throw new Error('Production builds require a live Clerk key in VITE_CLERK_PUBLISHABLE_KEY. Configure the GitHub Actions secret before deploying.');
+  if (mode === 'production') {
+    const keyBody = publishableKey?.match(/^pk_live_([A-Za-z0-9_-]+)$/)?.[1];
+    let frontendApi: string | undefined;
+
+    if (keyBody) {
+      try {
+        frontendApi = Buffer.from(keyBody, 'base64').toString('utf8');
+      } catch {
+        // Report the same safe configuration error as malformed key formats.
+      }
+    }
+
+    if (!frontendApi?.endsWith('$') || frontendApi.length < 3) {
+      throw new Error(
+        'Production build blocked: set the GitHub Actions secret VITE_CLERK_PUBLISHABLE_KEY to a valid Clerk pk_live_ publishable key. The key value is never printed.'
+      );
+    }
   }
 
   return {
