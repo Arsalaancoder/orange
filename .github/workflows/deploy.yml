@@ -28,7 +28,6 @@ jobs:
       - name: Build production website
         run: npm run build
         env:
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsub3JhbmdlY29sbGVnZXMuY29tJA' }}
           VITE_API_URL: https://orange-paramedical-api.orange-paramedical.workers.dev/api
           VITE_API_BASE_URL: https://orange-paramedical-api.orange-paramedical.workers.dev/api
 
@@ -42,11 +41,15 @@ jobs:
           fi
 
       - name: Set Clerk secret on API Worker
-        if: ${{ secrets.CLERK_SECRET_KEY != '' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-        run: printf '%s' "$CLERK_SECRET_KEY" | npx wrangler secret put CLERK_SECRET_KEY --config worker/wrangler.jsonc
+        run: |
+          if [ -n "$CLERK_SECRET_KEY" ]; then
+            printf '%s' "$CLERK_SECRET_KEY" | npx wrangler secret put CLERK_SECRET_KEY --config worker/wrangler.jsonc
+          else
+            echo "CLERK_SECRET_KEY not set in GitHub secrets; preserving existing Worker secret."
+          fi
 
       - name: Deploy Clerk API Worker
         uses: cloudflare/wrangler-action@v3
