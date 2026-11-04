@@ -36,6 +36,7 @@ jobs:
         id: check_cf
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
         run: |
           if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
             echo "has_token=true" >> "$GITHUB_OUTPUT"
@@ -44,9 +45,14 @@ jobs:
             echo "has_token=false" >> "$GITHUB_OUTPUT"
             echo "::notice::CLOUDFLARE_API_TOKEN is not configured in GitHub repository secrets. Build and validation succeeded. Frontend and unified worker deployment is handled automatically by Cloudflare Workers Builds."
           fi
+          if [ -n "$CLERK_SECRET_KEY" ]; then
+            echo "has_clerk_secret=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_clerk_secret=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set Clerk secret on API Worker
-        if: steps.check_cf.outputs.has_token == 'true' && secrets.CLERK_SECRET_KEY != ''
+        if: steps.check_cf.outputs.has_token == 'true' && steps.check_cf.outputs.has_clerk_secret == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
