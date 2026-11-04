@@ -63,7 +63,6 @@ export interface GalleryItem {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api';
 
-const DEFAULT_WORKER_ORIGIN = 'https://orange-paramedical-api.orange-paramedical.workers.dev';
 
 export function resolveImageUrl(imageUrl?: string): string {
   if (!imageUrl) return '';
@@ -84,16 +83,7 @@ export function resolveImageUrl(imageUrl?: string): string {
     return `${origin}${cleanPath}`;
   }
 
-  // If in browser and not on localhost/127.0.0.1 (i.e. on production domain):
-  if (
-    typeof window !== 'undefined' &&
-    window.location &&
-    !['localhost', '127.0.0.1'].includes(window.location.hostname)
-  ) {
-    return `${DEFAULT_WORKER_ORIGIN}${cleanPath}`;
-  }
-
-  // In local development, rely on Vite dev server proxy
+  // Same origin (both in production and via Vite dev proxy)
   return cleanPath;
 }
 

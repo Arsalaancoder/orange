@@ -1,14 +1,29 @@
 // Cloudflare Worker API for Orange Paramedical CMS
-// Connects React frontend with Cloudflare D1 Database (including D1 image storage) with server-side Clerk JWT validation
+// Connects React frontend with Cloudflare D1 Database with server-side Clerk JWT validation & authorization
 
 export interface Env {
   DB: D1Database;
+  ASSETS?: Fetcher;
   CLERK_SECRET_KEY?: string;
   CLERK_AUTHORIZED_PARTIES?: string;
+  ADMIN_EMAILS?: string;
+  ADMIN_USER_IDS?: string;
+}
+
+interface AuthenticatedUser {
+  userId: string;
+  email?: string;
+  claims: Record<string, unknown>;
+}
+
+interface AuthorizedAdmin {
+  userId: string;
+  email?: string;
+  role: 'admin';
 }
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit for D1 BLOB storage
 
 function getAuthorizedParties(env: Env): string[] {
   return (env.CLERK_AUTHORIZED_PARTIES || '').split(',').map((item) => item.trim()).filter(Boolean);
@@ -22,7 +37,10 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
   };
-  if (origin && getAuthorizedParties(env).includes(origin)) headers['Access-Control-Allow-Origin'] = origin;
+  const parties = getAuthorizedParties(env);
+  if (origin && (parties.includes(origin) || origin.endsWith('orangecolleges.com') || origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
   return headers;
 }
 
@@ -41,30 +59,139 @@ function errorResponse(message: string, status = 400, headers: Record<string, st
   return jsonResponse({ error: message, success: false }, status, headers);
 }
 
-async function verifyClerkAdmin(request: Request, env: Env): Promise<{ userId: string } | null> {
+async function authenticateClerkUser(
+  request: Request,
+  env: Env
+): Promise<{ authenticated: boolean; user?: AuthenticatedUser; error?: string; status?: number }> {
   const authHeader = request.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
+  if (!authHeader?.startsWith('Bearer ')) {
+    return { authenticated: false, error: 'Authentication required. Missing Bearer token.', status: 401 };
+  }
   const token = authHeader.substring(7).trim();
-  if (!token) return null;
-  if (!env.CLERK_SECRET_KEY) return null;
+  if (!token) {
+    return { authenticated: false, error: 'Authentication token is empty.', status: 401 };
+  }
+  if (!env.CLERK_SECRET_KEY) {
+    return { authenticated: false, error: 'Clerk authentication is not configured on this Worker.', status: 503 };
+  }
+
   try {
     const { verifyToken } = await import('@clerk/backend');
+    const parties = getAuthorizedParties(env);
     const claims = await verifyToken(token, {
       secretKey: env.CLERK_SECRET_KEY,
-      authorizedParties: getAuthorizedParties(env),
+      authorizedParties: parties.length > 0 ? parties : undefined,
     });
-    if (typeof claims.sub === 'string' && claims.sub.length > 0) {
-      return { userId: claims.sub };
+
+    if (!claims || typeof claims.sub !== 'string' || !claims.sub) {
+      return { authenticated: false, error: 'Invalid token subject.', status: 401 };
     }
-  } catch (err) {
-    console.warn('[Clerk Token Verify Error]:', err);
+
+    const claimsRecord = claims as Record<string, unknown>;
+    const email = (claimsRecord.email || claimsRecord.primary_email_address || claimsRecord.sub) as string;
+
+    return {
+      authenticated: true,
+      user: {
+        userId: claims.sub,
+        email: typeof email === 'string' ? email : undefined,
+        claims: claimsRecord,
+      },
+    };
+  } catch (err: any) {
+    console.warn('[Clerk Auth Error]:', err?.message || err);
+    return { authenticated: false, error: 'Invalid or expired session token.', status: 401 };
   }
-  return null;
+}
+
+async function authorizeAdmin(
+  user: AuthenticatedUser,
+  env: Env
+): Promise<{ authorized: boolean; admin?: AuthorizedAdmin; error?: string }> {
+  const { userId, email, claims } = user;
+
+  // 1. Check verified Clerk JWT metadata / claims for admin role
+  const meta = (claims.metadata || claims.publicMetadata || claims.public_metadata) as Record<string, unknown> | undefined;
+  const hasClerkAdminRole =
+    meta?.role === 'admin' ||
+    claims.org_role === 'admin' ||
+    claims.role === 'admin' ||
+    claims.admin === true;
+
+  if (hasClerkAdminRole) {
+    try {
+      await env.DB.prepare(
+        `INSERT INTO admin_users (user_id, email, role)
+         VALUES (?, ?, 'admin')
+         ON CONFLICT(user_id) DO UPDATE SET role = 'admin'`
+      ).bind(userId, email || null).run();
+    } catch {}
+    return { authorized: true, admin: { userId, email, role: 'admin' } };
+  }
+
+  // 2. Check D1 admin_users table
+  try {
+    const existingAdmin = await env.DB.prepare(
+      'SELECT user_id, role, email FROM admin_users WHERE user_id = ? AND role = ? LIMIT 1'
+    ).bind(userId, 'admin').first<{ user_id: string; role: string; email: string }>();
+
+    if (existingAdmin) {
+      return { authorized: true, admin: { userId: existingAdmin.user_id, email: existingAdmin.email, role: 'admin' } };
+    }
+  } catch (dbErr) {
+    console.warn('[D1 Admin Query Warning]:', dbErr);
+  }
+
+  // 3. Check environment-level administrator allowlist if configured
+  const allowedUsers = (env.ADMIN_USER_IDS || '').split(',').map((u) => u.trim()).filter(Boolean);
+  const allowedEmails = (env.ADMIN_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+  if (allowedUsers.includes(userId) || (email && allowedEmails.includes(email.toLowerCase()))) {
+    try {
+      await env.DB.prepare(
+        `INSERT INTO admin_users (user_id, email, role)
+         VALUES (?, ?, 'admin')
+         ON CONFLICT(user_id) DO UPDATE SET role = 'admin'`
+      ).bind(userId, email || null).run();
+    } catch {}
+    return { authorized: true, admin: { userId, email, role: 'admin' } };
+  }
+
+  // 4. Initial Administrator Bootstrap Check:
+  // If the admin_users table has NO users yet, the very first authenticated user who accesses the admin panel
+  // is registered as the primary administrator so existing administrator access is never locked out.
+  // Once at least one administrator exists in admin_users, all subsequent normal users are strictly rejected with 403.
+  try {
+    const countRow = await env.DB.prepare('SELECT COUNT(*) as count FROM admin_users WHERE role = ?').bind('admin').first<{ count: number }>();
+    const adminCount = countRow?.count ?? 0;
+    if (adminCount === 0) {
+      await env.DB.prepare(
+        `INSERT INTO admin_users (user_id, email, role)
+         VALUES (?, ?, 'admin')
+         ON CONFLICT(user_id) DO UPDATE SET role = 'admin'`
+      ).bind(userId, email || null).run();
+      console.log(`[Worker Bootstrap Initial Admin]: Granted administrator role to initial user ${userId}`);
+      return { authorized: true, admin: { userId, email, role: 'admin' } };
+    }
+  } catch (initErr) {
+    console.warn('[Admin Count Error]:', initErr);
+  }
+
+  return {
+    authorized: false,
+    error: 'Forbidden: Administrator authorization required. Registered normal accounts do not have access to administrative operations.',
+  };
 }
 
 async function ensureTablesExist(db: D1Database) {
   try {
     await db.exec(`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        user_id TEXT PRIMARY KEY,
+        email TEXT,
+        role TEXT NOT NULL DEFAULT 'admin',
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
       CREATE TABLE IF NOT EXISTS news (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
@@ -108,7 +235,8 @@ async function ensureTablesExist(db: D1Database) {
       CREATE TABLE IF NOT EXISTS media_storage (
         key TEXT PRIMARY KEY,
         content_type TEXT NOT NULL,
-        data_base64 TEXT NOT NULL,
+        data BLOB,
+        data_base64 TEXT,
         size INTEGER NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
@@ -124,6 +252,10 @@ async function ensureTablesExist(db: D1Database) {
       CREATE UNIQUE INDEX IF NOT EXISTS idx_gallery_storage_key ON gallery(storage_key);
       CREATE INDEX IF NOT EXISTS idx_media_storage_key ON media_storage(key);
     `);
+
+    try {
+      await db.exec('ALTER TABLE media_storage ADD COLUMN data BLOB;');
+    } catch {}
   } catch (err) {
     console.error('[Worker DB Init Error]:', err);
   }
@@ -135,23 +267,32 @@ export default {
     const method = request.method;
     const cors = corsHeaders(request, env);
 
+    // If static assets are configured and request is not for /api/*, serve static asset
+    if (!url.pathname.startsWith('/api')) {
+      if (env.ASSETS) {
+        return env.ASSETS.fetch(request);
+      }
+      return new Response('Not found', { status: 404 });
+    }
+
     console.log(`[Worker Request] ${method} ${url.pathname}${url.search}`);
 
     if (method === 'OPTIONS') {
       return new Response(null, { headers: cors, status: 204 });
     }
 
-    let administrator: { userId: string } | null = null;
+    let administrator: AuthorizedAdmin | null = null;
     if (url.pathname.startsWith('/api/admin/')) {
-      if (!env.CLERK_SECRET_KEY || !env.CLERK_AUTHORIZED_PARTIES?.trim()) {
-        return errorResponse('Admin authentication is not configured on this Worker.', 503, cors);
+      const authResult = await authenticateClerkUser(request, env);
+      if (!authResult.authenticated || !authResult.user) {
+        return errorResponse(authResult.error || 'Authentication required. A valid Clerk session is required.', authResult.status || 401, cors);
       }
-      try {
-        administrator = await verifyClerkAdmin(request, env);
-      } catch {
-        return errorResponse('A valid Clerk administrator session is required.', 401, cors);
+      await ensureTablesExist(env.DB);
+      const authzResult = await authorizeAdmin(authResult.user, env);
+      if (!authzResult.authorized || !authzResult.admin) {
+        return errorResponse(authzResult.error || 'Forbidden: Administrator authorization required.', 403, cors);
       }
-      if (!administrator) return errorResponse('A valid Clerk administrator session is required.', 401, cors);
+      administrator = authzResult.admin;
     }
 
     try {
@@ -248,7 +389,7 @@ export default {
       }
 
       // ----------------------------------------------------
-      // 1. IMAGE SERVING (/api/images/*) - Cloudflare D1 Native Storage
+      // 1. IMAGE SERVING (/api/images/*) - Cloudflare D1 Native Binary BLOB Storage
       // ----------------------------------------------------
       if (url.pathname.startsWith('/api/images/')) {
         const rawKey = url.pathname.replace(/^\/api\/images\//, '');
@@ -257,21 +398,30 @@ export default {
 
         try {
           const row = await env.DB.prepare(
-            'SELECT content_type, data_base64 FROM media_storage WHERE key = ? OR key = ? LIMIT 1'
-          ).bind(rawKey, key).first<{ content_type: string; data_base64: string }>();
+            'SELECT content_type, data, data_base64 FROM media_storage WHERE key = ? OR key = ? LIMIT 1'
+          ).bind(rawKey, key).first<{ content_type: string; data?: ArrayBuffer | Uint8Array; data_base64?: string }>();
 
-          if (row && row.data_base64) {
-            const binary = atob(row.data_base64);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) {
-              bytes[i] = binary.charCodeAt(i);
+          if (row) {
+            let bytes: Uint8Array | null = null;
+            if (row.data) {
+              bytes = row.data instanceof Uint8Array ? row.data : new Uint8Array(row.data as ArrayBuffer);
+            } else if (row.data_base64) {
+              const binary = atob(row.data_base64);
+              bytes = new Uint8Array(binary.length);
+              for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+              }
             }
-            const headers = new Headers({
-              'Content-Type': row.content_type || 'image/jpeg',
-              'Cache-Control': 'public, max-age=31536000, immutable',
-            });
-            Object.entries(cors).forEach(([k, v]) => headers.set(k, v));
-            return new Response(bytes, { headers });
+
+            if (bytes && bytes.length > 0) {
+              const headers = new Headers({
+                'Content-Type': row.content_type || 'image/jpeg',
+                'Cache-Control': 'public, max-age=31536000, immutable',
+                'Content-Length': bytes.byteLength.toString(),
+              });
+              Object.entries(cors).forEach(([k, v]) => headers.set(k, v));
+              return new Response(bytes, { headers, status: 200 });
+            }
           }
         } catch (d1Err) {
           console.warn('[Worker D1 Media Fetch Error]:', d1Err);
@@ -346,7 +496,7 @@ export default {
       // ----------------------------------------------------
       // 4. ADMIN MUTATION ENDPOINTS (Server-Side Clerk Token Verification)
       // ----------------------------------------------------
-      // POST /api/admin/upload - Image upload with R2 + D1 dual persistence
+      // POST /api/admin/upload - Image upload into D1 Native BLOB Storage
       if (method === 'POST' && url.pathname === '/api/admin/upload') {
         const contentTypeHeader = request.headers.get('Content-Type') || '';
         let fileBuffer: ArrayBuffer;
@@ -364,7 +514,13 @@ export default {
           const match = body.data.match(/^data:([^;]+);base64,(.+)$/);
           if (match) {
             fileType = match[1];
+            if (!ALLOWED_MIME_TYPES.includes(fileType.toLowerCase())) {
+              return errorResponse('Invalid image MIME type. Only JPG, PNG, and WebP are allowed.', 400, cors);
+            }
             const binary = atob(match[2]);
+            if (binary.length > MAX_FILE_SIZE) {
+              return errorResponse('File size exceeds the 5MB limit.', 400, cors);
+            }
             const bytes = new Uint8Array(binary.length);
             for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
             fileBuffer = bytes.buffer;
@@ -383,7 +539,7 @@ export default {
           }
 
           if (file.size > MAX_FILE_SIZE) {
-            return errorResponse('File size exceeds the 10MB limit.', 400, cors);
+            return errorResponse('File size exceeds the 5MB limit.', 400, cors);
           }
 
           fileType = file.type;
@@ -399,23 +555,23 @@ export default {
         const workerOrigin = `${url.protocol}//${url.host}`;
         const absolutePublicUrl = `${workerOrigin}/api/images/${storageKey}`;
 
-        // Store image into Cloudflare D1 media_storage table
+        // Store image into Cloudflare D1 media_storage table as native binary BLOB
         try {
-          const bytes = new Uint8Array(fileBuffer);
+          const rawBytes = new Uint8Array(fileBuffer);
           let binary = '';
           const chunkSize = 8192;
-          for (let i = 0; i < bytes.length; i += chunkSize) {
-            binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
+          for (let i = 0; i < rawBytes.length; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, Array.from(rawBytes.subarray(i, i + chunkSize)));
           }
           const base64 = btoa(binary);
 
           await env.DB.prepare(
-            `INSERT INTO media_storage (key, content_type, data_base64, size)
-             VALUES (?, ?, ?, ?)
-             ON CONFLICT(key) DO UPDATE SET data_base64 = excluded.data_base64, content_type = excluded.content_type, size = excluded.size`
-          ).bind(storageKey, fileType, base64, bytes.length).run();
+            `INSERT INTO media_storage (key, content_type, data, data_base64, size)
+             VALUES (?, ?, ?, ?, ?)
+             ON CONFLICT(key) DO UPDATE SET data = excluded.data, data_base64 = excluded.data_base64, content_type = excluded.content_type, size = excluded.size`
+          ).bind(storageKey, fileType, rawBytes, base64, rawBytes.length).run();
 
-          console.log(`[Worker D1 Media Upload Success]: Stored image at key ${storageKey} (${bytes.length} bytes)`);
+          console.log(`[Worker D1 Media Upload Success]: Stored BLOB image at key ${storageKey} (${rawBytes.length} bytes)`);
 
           return jsonResponse({
             success: true,
@@ -588,11 +744,13 @@ export default {
                 storageKey = `gallery/${body.category || 'campus'}/${Date.now()}_${id}.${ext}`;
               }
               const binary = atob(match[2]);
+              const bytes = new Uint8Array(binary.length);
+              for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
               await env.DB.prepare(
-                `INSERT INTO media_storage (key, content_type, data_base64, size)
-                 VALUES (?, ?, ?, ?)
-                 ON CONFLICT(key) DO UPDATE SET data_base64 = excluded.data_base64, content_type = excluded.content_type`
-              ).bind(storageKey, mime, match[2], binary.length).run();
+                `INSERT INTO media_storage (key, content_type, data, data_base64, size)
+                 VALUES (?, ?, ?, ?, ?)
+                 ON CONFLICT(key) DO UPDATE SET data = excluded.data, data_base64 = excluded.data_base64, content_type = excluded.content_type, size = excluded.size`
+              ).bind(storageKey, mime, bytes, match[2], binary.length).run();
               const workerOrigin = `${url.protocol}//${url.host}`;
               imageUrl = `${workerOrigin}/api/images/${storageKey}`;
             }

@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => {
     },
     proxy: {
       '/api': {
-        target: process.env.VITE_DEV_API_TARGET || 'https://orange-paramedical-api.orange-paramedical.workers.dev',
+        target: process.env.VITE_DEV_API_TARGET || 'https://orangecolleges.com',
         changeOrigin: true,
         secure: true,
       },

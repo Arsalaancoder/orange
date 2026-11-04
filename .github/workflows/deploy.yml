@@ -11,7 +11,6 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: VITE_CLERK_PUBLISHABLE_KEY
     timeout-minutes: 30
     steps:
       - name: Checkout repository
@@ -30,36 +29,38 @@ jobs:
         run: npm run build
         env:
           VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-          VITE_API_URL: https://orange-paramedical-api.orange-paramedical.workers.dev/api
-          VITE_API_BASE_URL: https://orange-paramedical-api.orange-paramedical.workers.dev/api
+          VITE_API_URL: /api
+          VITE_API_BASE_URL: /api
 
-      - name: Validate deployment secrets
+      - name: Check Cloudflare deployment credentials
+        id: check_cf
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "::error::Missing repository Actions secret CLOUDFLARE_API_TOKEN."
-            exit 1
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare API token detected. Standalone worker deployment will execute."
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::CLOUDFLARE_API_TOKEN is not configured in GitHub repository secrets. Build and validation succeeded. Frontend and unified worker deployment is handled automatically by Cloudflare Workers Builds."
           fi
 
       - name: Set Clerk secret on API Worker
+        if: steps.check_cf.outputs.has_token == 'true' && secrets.CLERK_SECRET_KEY != ''
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-        run: |
-          if [ -n "$CLERK_SECRET_KEY" ]; then
-            printf '%s' "$CLERK_SECRET_KEY" | npx wrangler secret put CLERK_SECRET_KEY --config worker/wrangler.jsonc
-          else
-            echo "CLERK_SECRET_KEY not set in GitHub secrets; preserving existing Worker secret."
-          fi
+        run: printf '%s' "$CLERK_SECRET_KEY" | npx wrangler secret put CLERK_SECRET_KEY --config worker/wrangler.jsonc
 
       - name: Deploy Clerk API Worker
+        if: steps.check_cf.outputs.has_token == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: deploy --config worker/wrangler.jsonc
 
       - name: Deploy static website Worker
+        if: steps.check_cf.outputs.has_token == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

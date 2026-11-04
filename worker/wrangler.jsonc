@@ -9,7 +9,7 @@
     { "pattern": "api.orangecolleges.com", "custom_domain": true }
   ],
   "vars": {
-    "CLERK_AUTHORIZED_PARTIES": "https://orangecolleges.com,https://www.orangecolleges.com,http://localhost:5173,http://127.0.0.1:5173"
+    "CLERK_AUTHORIZED_PARTIES": "https://orangecolleges.com,https://www.orangecolleges.com"
   },
   "d1_databases": [
     {
