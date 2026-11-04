@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAdminAuth } from '@/auth/adminAuth';
 import {
   LayoutDashboard,
   Newspaper,
@@ -11,14 +12,14 @@ import {
   ExternalLink,
   ShieldCheck,
   ChevronRight,
+
 } from 'lucide-react';
 import { useToast } from '@/components/admin/ui/toast';
 import { ConfirmDialog } from '@/components/admin/ui/dialog';
-import { useAdminAuth } from '@/auth/useAdminAuth';
-import { authClient } from '@/auth/authClient';
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAdminAuth();
+  const { user, signOut } = useAdminAuth();
+
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
@@ -31,11 +32,12 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     { label: 'News & Circulars', path: '/admin/news', icon: Newspaper },
     { label: 'Events & Workshops', path: '/admin/events', icon: Calendar },
     { label: 'Gallery & Photos', path: '/admin/gallery', icon: ImageIcon },
+
   ];
 
   const handleLogout = async () => {
     try {
-      await authClient.signOut();
+      await signOut();
       toast.success('Logged out', 'You have signed out of the administrator portal.');
       navigate('/admin/login');
     } catch {

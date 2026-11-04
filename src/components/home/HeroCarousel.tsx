@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSiteContent } from '@/context/SiteContentContext';
 
 export interface HeroSlide {
   id: number;
@@ -95,8 +96,29 @@ const AUTOPLAY_DURATION_MS = 6000;
 export const HeroCarousel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const shouldReduceMotion = useReducedMotion();
+  const { content } = useSiteContent();
+  const heroSlides = HERO_SLIDES.map((slide, index) => {
+    const number = index + 1;
+    const text = content.text;
+    return {
+      ...slide,
+      eyebrow: text[`home.hero.${number}.eyebrow`],
+      supportingText: text[`home.hero.${number}.description`],
+      imageUrl: text[`home.hero.${number}.image`],
+      imageLabel: text[`home.hero.${number}.imageLabel`],
+      imageSublabel: text[`home.hero.${number}.imageSublabel`],
+      heading: (
+        <>
+          {text[`home.hero.${number}.heading`]}{' '}
+          <span className={`text-[#FF8C38] font-serif italic font-extrabold tracking-wide drop-shadow-sm ${number === 1 ? 'block mt-1' : ''}`}>
+            {text[`home.hero.${number}.highlight`]}
+          </span>
+        </>
+      ),
+    };
+  });
 
-  const currentSlide = HERO_SLIDES[currentIndex];
+  const currentSlide = heroSlides[currentIndex];
 
   const handleNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % HERO_SLIDES.length);

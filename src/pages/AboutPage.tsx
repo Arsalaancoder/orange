@@ -16,12 +16,14 @@ import {
   Quote
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSiteContent } from '@/context/SiteContentContext';
 
 export const AboutPage: React.FC = () => {
+  const { content } = useSiteContent();
   return (
     <PageShell
       title="About Us"
-      description="Orange Group of Nursing & Paramedical Colleges is dedicated to developing competent and compassionate healthcare professionals through structured academic education and practical training."
+      description={content.text['about.hero.description']}
     >
       {/* 1. PAGE HERO */}
       <section className="bg-[#F8F4FE] py-12 md:py-20 border-b border-[#F0E8FF] relative overflow-hidden">
@@ -31,13 +33,13 @@ export const AboutPage: React.FC = () => {
             <div className="lg:col-span-7 space-y-6">
               <Reveal variant="fadeUp">
                 <Eyebrow theme="purple">
-                  ABOUT ORANGE GROUP
+                  {content.text['about.hero.eyebrow']}
                 </Eyebrow>
               </Reveal>
 
               <Reveal variant="fadeUp" delay={0.1}>
                 <h1 className="heading-hero text-[#1F192F] tracking-tight font-extrabold max-w-2xl inline-flex flex-wrap items-baseline gap-2">
-                  <span>Building Skilled, Compassionate Healthcare Professionals.</span>
+                  <span>{content.text['about.hero.title']}</span>
                   <span className="text-[#8B5CF6] inline-flex">
                     <svg className="w-8 h-8 md:w-10 md:h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                       <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
@@ -48,7 +50,7 @@ export const AboutPage: React.FC = () => {
 
               <Reveal variant="fadeUp" delay={0.2}>
                 <p className="text-base md:text-lg lg:text-xl text-[#667085] leading-relaxed max-w-xl font-sans">
-                  Orange Group of Medical Colleges is dedicated to developing competent and compassionate healthcare professionals through structured academic education and practical training.
+                  {content.text['about.hero.description']}
                 </p>
               </Reveal>
 
@@ -69,13 +71,13 @@ export const AboutPage: React.FC = () => {
               <Reveal variant="scaleUp" delay={0.2}>
                 <div className="relative rounded-3xl overflow-hidden border border-[#E8D9FF] shadow-2xl shadow-purple-500/10 bg-white p-2">
                   <ImagePlaceholder
-                    label="Nursing & Healthcare Education"
-                    imageUrl="/images/cards/nursing-lab.jpg"
+                    label={content.text['about.hero.imageLabel']}
+                    imageUrl={content.text['about.hero.image']}
                     aspectRatio="4:3"
                     className="rounded-2xl border-0"
                   />
                   <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md text-[#1F192F] text-xs font-bold px-4 py-2.5 rounded-2xl border border-[#E8D9FF] shadow-xs">
-                    Classroom • Laboratory • Clinical Exposure
+                    {content.text['about.hero.caption']}
                   </div>
                 </div>
               </Reveal>
@@ -89,10 +91,10 @@ export const AboutPage: React.FC = () => {
         <Container>
           <div className="text-center max-w-3xl mx-auto mb-16">
             <Eyebrow theme="purple" className="mb-4">
-              OUR VALUES
+              {content.text['about.values.eyebrow']}
             </Eyebrow>
             <h2 className="heading-section font-bold text-[#1F192F] tracking-tight inline-flex items-center gap-2 flex-wrap justify-center">
-              <span>Hear what people are saying about career Management.</span>
+              <span>{content.text['about.values.title']}</span>
               <span className="text-[#8B5CF6] inline-flex">
                 <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                   <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
@@ -108,9 +110,9 @@ export const AboutPage: React.FC = () => {
                 <div className="w-16 h-16 rounded-full bg-[#EBE2FF] text-[#7C3AED] flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
                   <Stethoscope className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-[#1F192F]">Business Progress</h3>
+                <h3 className="text-xl font-bold text-[#1F192F]">{content.text['about.values.1.title']}</h3>
                 <p className="text-sm text-[#667085] leading-relaxed">
-                  Your education is our mission. We believe in making your dreams and goals a reality with our expert clinical faculty.
+                  {content.text['about.values.1.body']}
                 </p>
               </div>
               <div className="pt-8">
@@ -127,9 +129,9 @@ export const AboutPage: React.FC = () => {
                 <div className="w-16 h-16 rounded-full bg-white/20 text-white flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
                   <Activity className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Business Administration</h3>
+                <h3 className="text-xl font-bold text-white">{content.text['about.values.2.title']}</h3>
                 <p className="text-sm text-purple-100 leading-relaxed">
-                  Your education is our mission. We believe in making your dreams and goals a reality and our experts know just how.
+                  {content.text['about.values.2.body']}
                 </p>
               </div>
               <div className="pt-8">
@@ -146,9 +148,9 @@ export const AboutPage: React.FC = () => {
                 <div className="w-16 h-16 rounded-full bg-[#EBE2FF] text-[#7C3AED] flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
                   <Award className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-[#1F192F]">Secret Sucess Teamwork</h3>
+                <h3 className="text-xl font-bold text-[#1F192F]">{content.text['about.values.3.title']}</h3>
                 <p className="text-sm text-[#667085] leading-relaxed">
-                  Your education is our mission. We believe in making your dreams and goals a reality and our experts know just how.
+                  {content.text['about.values.3.body']}
                 </p>
               </div>
               <div className="pt-8">
@@ -169,14 +171,14 @@ export const AboutPage: React.FC = () => {
             {/* Left Content */}
             <div className="lg:col-span-6 space-y-6">
               <SectionHeading
-                eyebrow="OUR MISSION"
-                title="Hear what people are saying about career Management."
-                subtitle="Orange Group of Medical Colleges is dedicated to developing competent and compassionate healthcare professionals through structured academic education and practical training."
+                eyebrow={content.text['about.mission.eyebrow']}
+                title={content.text['about.mission.title']}
+                subtitle={content.text['about.mission.subtitle']}
                 className="mb-6"
               />
 
               <p className="text-[#667085] text-base leading-relaxed">
-                As a Business Coach, Mark not only understands the nuances necessary to navigate the hiring cycle but can help discover right path to a rewarding career or assistance in 'moving up' the ladder.
+                {content.text['about.mission.body']}
               </p>
 
               <div className="pt-4">
@@ -245,7 +247,7 @@ export const AboutPage: React.FC = () => {
               <div className="relative rounded-3xl overflow-hidden border border-[#E8D9FF] shadow-2xl shadow-purple-500/10">
                 <ImagePlaceholder
                   label="Healthcare Learning Vision"
-                  imageUrl="/images/cards/anesthesia-ot.jpg"
+                  imageUrl={content.text['about.vision.image']}
                   aspectRatio="4:5"
                   className="w-full h-full object-cover rounded-none border-0"
                 />
@@ -255,9 +257,9 @@ export const AboutPage: React.FC = () => {
             {/* Right Vision Column */}
             <div className="lg:col-span-6 space-y-6">
               <SectionHeading
-                eyebrow="OUR VISION"
-                title="Pioneering Excellence in Nursing & Healthcare Education."
-                subtitle="Orange Group of Medical Colleges is committed to establishing benchmark educational institutions across Telangana, combining academic rigor, clinical simulation, and empathetic patient care."
+                eyebrow={content.text['about.vision.eyebrow']}
+                title={content.text['about.vision.title']}
+                subtitle={content.text['about.vision.subtitle']}
                 className="mb-6"
               />
 
@@ -304,10 +306,10 @@ export const AboutPage: React.FC = () => {
                   JOIN ORANGE GROUP
                 </span>
                 <h2 className="text-3xl md:text-4xl font-serif-heading font-bold text-white tracking-tight">
-                  Begin Your Journey in Healthcare Education.
+                  {content.text['about.cta.title']}
                 </h2>
                 <p className="text-purple-100 text-sm md:text-base leading-relaxed">
-                  Explore Nursing, Paramedical and Allied Healthcare programs across Orange Group institutions.
+                  {content.text['about.cta.body']}
                 </p>
               </div>
 

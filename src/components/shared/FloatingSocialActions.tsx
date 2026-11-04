@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { siteConfig } from '@/config/site';
+import { useSiteContent } from '@/context/SiteContentContext';
 
 export const FloatingSocialActions: React.FC = () => {
+  const { content } = useSiteContent();
   const [expandedButton, setExpandedButton] = useState<'whatsapp' | 'facebook' | null>(null);
   const location = useLocation();
 
   // Read config
-  const rawNumber = siteConfig.contact.whatsappNumber || siteConfig.contact.primaryPhone;
+  const rawNumber = siteConfig.contact.whatsappNumber || content.text['contact.phonePrimary'];
   const whatsappNumber = rawNumber ? rawNumber.replace(/\D/g, '') : null;
   
   const formattedWhatsAppNumber = whatsappNumber

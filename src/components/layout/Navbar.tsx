@@ -9,13 +9,14 @@ import { MobileMenu } from './MobileMenu';
 import { AdmissionsTicker } from './AdmissionsTicker';
 import { Menu, X, ChevronDown, MapPin, PhoneCall } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { siteConfig } from '@/config/site';
+import { useSiteContent } from '@/context/SiteContentContext';
 
 interface NavbarProps {
   initialMode?: 'solid' | 'transparent';
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
+  const { content } = useSiteContent();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -109,11 +110,11 @@ export const Navbar: React.FC<NavbarProps> = ({ initialMode = 'solid' }) => {
           {/* Helpline — always visible, whitespace-nowrap on itself only */}
           <div className="flex items-center gap-1.5 text-[11px] md:text-xs ml-auto">
             <a
-              href={`tel:${siteConfig.contact.primaryPhone}`}
+              href={`tel:${content.text['contact.phonePrimary']}`}
               className="flex items-center gap-1.5 font-semibold text-white hover:text-[#F26A21] transition-colors whitespace-nowrap"
             >
               <PhoneCall className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
-              <span>Admissions Helpline: {siteConfig.contact.primaryPhone}</span>
+              <span>Admissions Helpline: {content.text['contact.phonePrimary']}</span>
             </a>
           </div>
         </div>

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { api } from '@/services/api';
+﻿import React, { useEffect, useState } from 'react';
+import { useAdminAuth } from '@/auth/adminAuth';
+import { api, resolveImageUrl } from '@/services/api';
 import type { GalleryItem } from '@/services/api';
 import { Card } from '@/components/admin/ui/card';
 import { Badge } from '@/components/admin/ui/badge';
@@ -35,7 +36,53 @@ interface PendingUpload {
   errorMessage?: string;
 }
 
+interface GalleryCardImageProps {
+  src: string;
+  alt: string;
+}
+
+const GalleryCardImage: React.FC<GalleryCardImageProps> = ({ src, alt }) => {
+  const [hasError, setHasError] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+    setIsLoaded(false);
+  }, [src]);
+
+  const resolved = resolveImageUrl(src);
+
+  if (!resolved || hasError) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 p-4 text-center">
+        <ImageIcon className="w-10 h-10 mb-1 opacity-50" />
+        <span className="text-[11px] font-semibold text-slate-500">Image unavailable</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full relative">
+      {!isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-100 animate-pulse">
+          <ImageIcon className="w-8 h-8 text-slate-300" />
+        </div>
+      )}
+      <img
+        src={resolved}
+        alt={alt}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => setHasError(true)}
+        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+          isLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+    </div>
+  );
+};
+
 export const AdminGalleryPage: React.FC = () => {
+  const { getToken } = useAdminAuth();
   const toast = useToast();
   const [galleryList, setGalleryList] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +98,8 @@ export const AdminGalleryPage: React.FC = () => {
   const [editTitle, setEditTitle] = useState('');
   const [editCaption, setEditCaption] = useState('');
   const [editCategory, setEditCategory] = useState('campus');
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
 
   // Delete Item
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -59,7 +108,8 @@ export const AdminGalleryPage: React.FC = () => {
   const fetchGallery = async () => {
     setLoading(true);
     try {
-      const data = await api.getAdminGallery();
+      const token = await getToken();
+      const data = await api.getAdminGallery(token || undefined);
       setGalleryList(data);
     } catch (err) {
       toast.error('Failed to load gallery', 'Could not fetch photos.');
@@ -101,7 +151,8 @@ export const AdminGalleryPage: React.FC = () => {
           compressedFile: compressed.file,
           status: 'pending',
         });
-      } catch (err: any) {
+      } catch {
+
         toast.error('Compression Error', `Could not compress ${file.name}`);
       }
     }
@@ -125,10 +176,11 @@ export const AdminGalleryPage: React.FC = () => {
       );
 
       try {
+        const token = await getToken();
         const folderKey = `gallery/${item.category}`;
-        const uploadRes = await api.uploadImage(item.compressedFile, folderKey);
+        const uploadRes = await api.uploadImage(item.compressedFile, folderKey, token || undefined);
 
-        await api.createGalleryItem({
+        const savedItem = await api.createGalleryItem({
           title: item.title,
           caption: item.caption,
           category: item.category,
@@ -136,18 +188,28 @@ export const AdminGalleryPage: React.FC = () => {
           storage_key: uploadRes.storage_key,
           r2_key: uploadRes.key,
           display_order: galleryList.length + i + 1,
-        });
+        }, token || undefined);
 
-        completedCount++;
+        // Immediately inject the item into the gallery list using the local preview URL
+        // so the image is visible right away without waiting for a remote fetch.
+        const displayItem = { ...savedItem, image_url: item.previewUrl || uploadRes.url };
+        setGalleryList((prev) => [displayItem, ...prev.filter((g) => g.id !== savedItem.id)]);
+
+        if (uploadRes.url.startsWith('data:')) {
+          toast.success('Image saved locally', 'Photo is visible now. It will sync when connection is restored.');
+        }
+
+        completedCount += 1;
         setUploadProgress(Math.round((completedCount / total) * 100));
 
         setPendingUploads((prev) =>
           prev.map((p, idx) => (idx === i ? { ...p, status: 'completed' } : p))
         );
-      } catch (err: any) {
+      } catch (uploadErr) {
+        console.warn('[Gallery Upload Error]', uploadErr);
         setPendingUploads((prev) =>
           prev.map((p, idx) =>
-            idx === i ? { ...p, status: 'error', errorMessage: err.message } : p
+            idx === i ? { ...p, status: 'error', errorMessage: 'Upload failed' } : p
           )
         );
       }
@@ -185,7 +247,8 @@ export const AdminGalleryPage: React.FC = () => {
 
     setGalleryList(newList);
     try {
-      await api.reorderGallery(updatedOrder);
+      const token = await getToken();
+      await api.reorderGallery(updatedOrder, token || undefined);
       toast.success('Order Updated', 'Gallery sequence updated.');
     } catch {
       toast.error('Reorder Error', 'Failed to update order.');
@@ -197,18 +260,48 @@ export const AdminGalleryPage: React.FC = () => {
     setEditTitle(item.title);
     setEditCaption(item.caption);
     setEditCategory(item.category);
+    setEditImageFile(null);
+    setEditImagePreview(item.image_url ? resolveImageUrl(item.image_url) : null);
+  };
+
+  const handleEditFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      toast.error('Image Skipped', validation.error || 'Invalid file');
+      return;
+    }
+    setEditImageFile(file);
+    setEditImagePreview(URL.createObjectURL(file));
   };
 
   const handleSaveEdit = async () => {
     if (!editingItem) return;
     try {
+      const token = await getToken();
+      let updatedImageUrl = editingItem.image_url;
+      let updatedStorageKey = editingItem.storage_key;
+
+      if (editImageFile) {
+        const compressed = await compressImage(editImageFile, { maxWidth: 1920, quality: 0.85 });
+        const uploadRes = await api.uploadImage(compressed.file, `gallery/${editCategory}`, token || undefined);
+        updatedImageUrl = uploadRes.url;
+        updatedStorageKey = uploadRes.storage_key || uploadRes.key;
+      }
+
       await api.updateGalleryItem(editingItem.id, {
         title: editTitle,
         caption: editCaption,
         category: editCategory,
-      });
-      toast.success('Photo Updated', 'Gallery photo details updated.');
+        image_url: updatedImageUrl,
+        storage_key: updatedStorageKey,
+      }, token || undefined);
+
+      toast.success('Photo Updated', 'Gallery photo details updated successfully.');
       setEditingItem(null);
+      setEditImageFile(null);
+      setEditImagePreview(null);
       fetchGallery();
     } catch {
       toast.error('Update Failed', 'Could not update gallery item.');
@@ -219,7 +312,8 @@ export const AdminGalleryPage: React.FC = () => {
     if (!deletingId) return;
     setIsDeleting(true);
     try {
-      await api.deleteGalleryItem(deletingId);
+      const token = await getToken();
+      await api.deleteGalleryItem(deletingId, token || undefined);
       toast.success('Photo Deleted', 'Gallery photo removed successfully.');
       setDeletingId(null);
       fetchGallery();
@@ -398,11 +492,7 @@ export const AdminGalleryPage: React.FC = () => {
               <Card className="h-full flex flex-col justify-between hover:border-sky-200 transition-all group">
                 <div>
                   <div className="relative h-48 bg-slate-100 overflow-hidden">
-                    <img
-                      src={item.image_url}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    <GalleryCardImage src={item.image_url} alt={item.title} />
                     <div className="absolute top-3 left-3">
                       <Badge variant="orange">{item.category}</Badge>
                     </div>
@@ -504,6 +594,28 @@ export const AdminGalleryPage: React.FC = () => {
               <option value="events">events</option>
               <option value="general">general</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Photo / Replace Image
+            </label>
+            {editImagePreview && (
+              <div className="mb-2 w-full h-32 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative">
+                <img
+                  src={editImagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleEditFileChange}
+              className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">Select a new image to replace the current photo (JPG, PNG, WebP up to 10MB).</p>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">

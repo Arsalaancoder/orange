@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 // ─── Lazy-loaded Public Pages ─────────────────────────────────────────────────
@@ -29,6 +29,7 @@ const AdminDashboardPage   = lazy(() => import('@/pages/admin/AdminDashboardPage
 const AdminNewsPage        = lazy(() => import('@/pages/admin/AdminNewsPage').then(m => ({ default: m.AdminNewsPage })));
 const AdminEventsPage      = lazy(() => import('@/pages/admin/AdminEventsPage').then(m => ({ default: m.AdminEventsPage })));
 const AdminGalleryPage     = lazy(() => import('@/pages/admin/AdminGalleryPage').then(m => ({ default: m.AdminGalleryPage })));
+
 
 // ─── Static imports (tiny wrappers, needed on every admin route) ──────────────
 import { AdminProtectedRoute } from '@/components/admin/AdminProtectedRoute';
@@ -141,6 +142,7 @@ export function App() {
       <Route path="/admin/news"      element={<AdminPage><AdminNewsPage /></AdminPage>} />
       <Route path="/admin/events"    element={<AdminPage><AdminEventsPage /></AdminPage>} />
       <Route path="/admin/gallery"   element={<AdminPage><AdminGalleryPage /></AdminPage>} />
+      <Route path="/admin/content"   element={<Navigate to="/admin/dashboard" replace />} />
 
       {/* 404 */}
       <Route path="*" element={<PublicPage><NotFoundPage /></PublicPage>} />

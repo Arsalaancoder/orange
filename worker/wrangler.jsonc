@@ -9,8 +9,7 @@
     { "pattern": "api.orangecolleges.com", "custom_domain": true }
   ],
   "vars": {
-    "BETTER_AUTH_URL": "https://api.orangecolleges.com",
-    "AUTH_TRUSTED_ORIGINS": "https://orangecolleges.com,https://www.orangecolleges.com,http://localhost:5173"
+    "CLERK_AUTHORIZED_PARTIES": "https://orangecolleges.com,https://www.orangecolleges.com,http://localhost:5173,http://127.0.0.1:5173"
   },
   "d1_databases": [
     {

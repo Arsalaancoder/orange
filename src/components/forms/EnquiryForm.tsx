@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { CheckCircle2, AlertCircle, MessageSquare, Mail } from 'lucide-react';
-import { programsData } from '@/data/programs';
+import { useSiteContent } from '@/context/SiteContentContext';
 import { collegesData } from '@/data/colleges';
-import { siteConfig } from '@/config/site';
 
 interface EnquiryFormProps {
   className?: string;
@@ -17,6 +16,8 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
   compact = false,
   defaultProgramCode = ''
 }) => {
+  const { content } = useSiteContent();
+  const programsData = content.programs;
   const [searchParams] = useSearchParams();
   const programQuery = searchParams.get('program');
   const collegeQuery = searchParams.get('college');
@@ -54,7 +55,7 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
         setFormData(prev => ({ ...prev, preferredCollege: matchedCol.name }));
       }
     }
-  }, [programQuery, collegeQuery, defaultProgramCode]);
+  }, [programQuery, collegeQuery, defaultProgramCode, programsData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -64,7 +65,7 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({
   };
 
   const getWhatsAppUrl = () => {
-    const targetPhone = `91${siteConfig.contact.primaryPhone}`;
+    const targetPhone = `91${content.text['contact.phonePrimary']}`;
     const lines = [
       `*New Student Admission Enquiry - Orange Group* 🎓`,
       ``,

@@ -24,7 +24,7 @@ import {
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { FaqSection } from '@/components/ui/habit-faq-scroller';
 import { collegesData } from '@/data/colleges';
-import { programsData } from '@/data/programs';
+import { useSiteContent } from '@/context/SiteContentContext';
 import { whyChooseUsData } from '@/data/whyChooseUs';
 import { scrollingAdmissionFaqData } from '@/data/faqs';
 
@@ -43,8 +43,10 @@ import {
 import { Link } from 'react-router-dom';
 
 export const HomePage: React.FC = () => {
+  const { content } = useSiteContent();
   const [programFilter, setProgramFilter] = useState<'All' | 'Nursing' | 'Paramedical'>('All');
 
+  const programsData = content.programs;
   const filteredPrograms = programFilter === 'All'
     ? programsData.slice(0, 6)
     : programsData.filter(p => p.category === programFilter).slice(0, 6);
@@ -66,14 +68,14 @@ export const HomePage: React.FC = () => {
             {/* Left Content Column */}
             <Reveal variant="fadeUp" className="lg:col-span-6 space-y-6">
               <SectionHeading
-                eyebrow="ABOUT ORANGE GROUP"
-                title="Hear what leaders say about Healthcare Training."
-                subtitle="Orange Group of Medical Colleges is dedicated to developing competent and compassionate healthcare professionals through structured academic education and practical training."
+                eyebrow={content.text['home.about.eyebrow']}
+                title={content.text['home.about.title']}
+                subtitle={content.text['home.about.subtitle']}
                 className="mb-6"
               />
 
               <p className="text-[#667085] text-base leading-relaxed">
-                As a premier healthcare educational group, our institutions blend classroom theory, state-of-the-art laboratory practice, clinical hospital rotations, and continuous career mentorship to guide every student toward a rewarding medical career.
+                {content.text['home.about.body']}
               </p>
 
               {/* 4 Feature Badges */}
@@ -153,10 +155,10 @@ export const HomePage: React.FC = () => {
             className="text-center max-w-3xl mx-auto mb-16"
           >
             <Eyebrow theme="purple" className="mb-4">
-              OUR VALUES
+              {content.text['home.values.eyebrow']}
             </Eyebrow>
             <h2 className="heading-section font-bold text-[#1F192F] tracking-tight inline-flex items-center gap-2 flex-wrap justify-center">
-              <span>Hear what people are saying about Orange Group.</span>
+              <span>{content.text['home.values.title']}</span>
               <span className="text-[#8B5CF6] inline-flex">
                 <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                   <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
@@ -182,9 +184,9 @@ export const HomePage: React.FC = () => {
                 <div className="w-16 h-16 rounded-full bg-[#EBE2FF] text-[#7C3AED] flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
                   <Stethoscope className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-[#1F192F]">Academic Progress</h3>
+                <h3 className="text-xl font-bold text-[#1F192F]">{content.text['home.values.1.title']}</h3>
                 <p className="text-sm text-[#667085] leading-relaxed">
-                  Our structured nursing and paramedical syllabus helps students navigate their academic goals with confidence and diagnostic precision.
+                  {content.text['home.values.1.body']}
                 </p>
               </div>
               <div className="pt-8">
@@ -204,9 +206,9 @@ export const HomePage: React.FC = () => {
                 <div className="w-16 h-16 rounded-full bg-white/20 text-white flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
                   <Activity className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Healthcare Administration</h3>
+                <h3 className="text-xl font-bold text-white">{content.text['home.values.2.title']}</h3>
                 <p className="text-sm text-purple-100 leading-relaxed">
-                  Your education is our mission. We believe in making your dreams of a medical career a reality with top clinical faculty and labs.
+                  {content.text['home.values.2.body']}
                 </p>
               </div>
               <div className="pt-8">
@@ -226,9 +228,9 @@ export const HomePage: React.FC = () => {
                 <div className="w-16 h-16 rounded-full bg-[#EBE2FF] text-[#7C3AED] flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
                   <Award className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-[#1F192F]">Secret Success Teamwork</h3>
+                <h3 className="text-xl font-bold text-[#1F192F]">{content.text['home.values.3.title']}</h3>
                 <p className="text-sm text-[#667085] leading-relaxed">
-                  Collaborative clinical learning, interdisciplinary workshops, and patient care simulations foster strong teamwork skills.
+                  {content.text['home.values.3.body']}
                 </p>
               </div>
               <div className="pt-8">
@@ -249,14 +251,14 @@ export const HomePage: React.FC = () => {
             {/* Left Content */}
             <Reveal variant="fadeUp" className="lg:col-span-6 space-y-6">
               <SectionHeading
-                eyebrow="OUR MISSION"
-                title="Hear what leaders say about career Management."
-                subtitle="As an accredited group of medical colleges, Orange Group understands the nuances necessary to navigate healthcare education and build rewarding hospital careers."
+                eyebrow={content.text['home.mission.eyebrow']}
+                title={content.text['home.mission.title']}
+                subtitle={content.text['home.mission.subtitle']}
                 className="mb-6"
               />
 
               <p className="text-[#667085] text-base leading-relaxed">
-                We empower students from diverse backgrounds with affordable, high-quality nursing and paramedical education, combining rigorous academic study with compassionate bedside manner.
+                {content.text['home.mission.body']}
               </p>
 
               <div className="pt-4">
@@ -358,14 +360,14 @@ export const HomePage: React.FC = () => {
             {/* Right Content */}
             <Reveal variant="fadeUp" className="lg:col-span-6 space-y-6">
               <SectionHeading
-                eyebrow="OUR VISION"
-                title="Hear what people are saying about career Management."
-                subtitle="Our vision is to build a benchmark institution for healthcare and medical education across Telangana."
+                eyebrow={content.text['home.vision.eyebrow']}
+                title={content.text['home.vision.title']}
+                subtitle={content.text['home.vision.subtitle']}
                 className="mb-6"
               />
 
               <p className="text-[#667085] text-base leading-relaxed">
-                As a leading medical coaching institution, our faculty ensures that students master both diagnostic science and compassionate care through hands-on practical learning.
+                {content.text['home.vision.body']}
               </p>
 
               {/* Checkmark List */}

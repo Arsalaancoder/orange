@@ -1,36 +1,30 @@
-// Cloudflare Worker API for Orange Paramedical CMS and Better Auth.
-import { createAuth, type AuthEnv } from './auth';
+// Cloudflare Worker API for Orange Paramedical CMS
+// Connects React frontend with Cloudflare D1 Database & R2 Storage Bucket with server-side Clerk JWT validation
 
 export interface Env {
   DB: D1Database;
   MEDIA?: R2Bucket;
   BUCKET?: R2Bucket;
-  BETTER_AUTH_SECRET?: string;
-  BETTER_AUTH_URL?: string;
-  AUTH_TRUSTED_ORIGINS?: string;
-  BOOTSTRAP_ADMIN_CODE?: string;
+  CLERK_SECRET_KEY?: string;
+  CLERK_AUTHORIZED_PARTIES?: string;
 }
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
 
-function corsHeaders(request: Request, env?: Env): Record<string, string> {
+function getAuthorizedParties(env: Env): string[] {
+  return (env.CLERK_AUTHORIZED_PARTIES || '').split(',').map((item) => item.trim()).filter(Boolean);
+}
+
+function corsHeaders(request: Request, env: Env): Record<string, string> {
   const origin = request.headers.get('Origin');
-  const configuredOrigins = (env?.AUTH_TRUSTED_ORIGINS || '')
-    .split(',').map((value) => value.trim()).filter(Boolean);
-  const allowedOrigins = configuredOrigins.length ? configuredOrigins : [
-    'https://orangecolleges.com',
-    'https://www.orangecolleges.com',
-    'http://localhost:5173',
-  ];
   const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Requested-With',
-    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
   };
-  if (origin && allowedOrigins.includes(origin)) headers['Access-Control-Allow-Origin'] = origin;
+  if (origin && getAuthorizedParties(env).includes(origin)) headers['Access-Control-Allow-Origin'] = origin;
   return headers;
 }
 
@@ -49,77 +43,6 @@ function errorResponse(message: string, status = 400, headers: Record<string, st
   return jsonResponse({ error: message, success: false }, status, headers);
 }
 
-async function matchesSecret(provided: string, expected: string): Promise<boolean> {
-  const encoder = new TextEncoder();
-  const [providedHash, expectedHash] = await Promise.all([
-    crypto.subtle.digest('SHA-256', encoder.encode(provided)),
-    crypto.subtle.digest('SHA-256', encoder.encode(expected)),
-  ]);
-  const left = new Uint8Array(providedHash);
-  const right = new Uint8Array(expectedHash);
-  let difference = 0;
-  for (let index = 0; index < left.length; index += 1) difference |= left[index] ^ right[index];
-  return difference === 0;
-}
-
-async function bootstrapFirstAdmin(request: Request, env: Env, cors: Record<string, string>): Promise<Response> {
-  const code = env.BOOTSTRAP_ADMIN_CODE;
-  if (!code || code.length < 32) return errorResponse('Initial administrator setup is not enabled.', 404, cors);
-
-  let payload: { setupCode?: unknown; name?: unknown; email?: unknown; password?: unknown };
-  try {
-    payload = await request.json() as typeof payload;
-  } catch {
-    return errorResponse('Invalid setup request.', 400, cors);
-  }
-  if (typeof payload.setupCode !== 'string' || !await matchesSecret(payload.setupCode, code)) {
-    return errorResponse('Setup code is invalid or setup is unavailable.', 403, cors);
-  }
-
-  const existingAdmin = await env.DB.prepare("SELECT id FROM user WHERE role = 'admin' LIMIT 1").first();
-  if (existingAdmin) return errorResponse('Initial administrator setup is already complete.', 409, cors);
-  if (typeof payload.name !== 'string' || typeof payload.email !== 'string' || typeof payload.password !== 'string') {
-    return errorResponse('Name, email, and password are required.', 400, cors);
-  }
-
-  const auth = createAuth(env as Env & AuthEnv, true);
-  const signupUrl = new URL('/api/auth/sign-up/email', request.url);
-  const signupHeaders = new Headers(request.headers);
-  signupHeaders.delete('content-length');
-  const signupResponse = await auth.handler(new Request(signupUrl, {
-    method: 'POST',
-    headers: signupHeaders,
-    body: JSON.stringify({ name: payload.name, email: payload.email, password: payload.password }),
-  }));
-  if (!signupResponse.ok) {
-    const headers = new Headers(signupResponse.headers);
-    for (const [key, value] of Object.entries(cors)) headers.set(key, value);
-    return new Response(signupResponse.body, { status: signupResponse.status, statusText: signupResponse.statusText, headers });
-  }
-
-  const result = await signupResponse.json() as { user?: { id?: unknown; role?: unknown } };
-  const userId = result.user?.id;
-  if (typeof userId !== 'string') return errorResponse('Could not complete administrator setup.', 500, cors);
-
-  // This conditional update is atomic in D1. If two valid setup requests race,
-  // only one account can become the first administrator.
-  const promoted = await env.DB.prepare(
-    "UPDATE user SET role = 'admin' WHERE id = ? AND NOT EXISTS (SELECT 1 FROM user WHERE role = 'admin' AND id <> ?)"
-  ).bind(userId, userId).run();
-  if (promoted.meta.changes !== 1) {
-    return errorResponse('Initial administrator setup was completed by another request. Sign in with the created account if it is yours.', 409, cors);
-  }
-
-  const headers = new Headers(signupResponse.headers);
-  for (const [key, value] of Object.entries(cors)) headers.set(key, value);
-  headers.delete('content-length');
-  return new Response(JSON.stringify({ ...result, user: { ...result.user, role: 'admin' } }), {
-    status: signupResponse.status,
-    statusText: signupResponse.statusText,
-    headers,
-  });
-}
-
 function getR2Bucket(env: Env): R2Bucket {
   const bucket = env.MEDIA || env.BUCKET;
   if (!bucket) {
@@ -128,9 +51,25 @@ function getR2Bucket(env: Env): R2Bucket {
   return bucket;
 }
 
+async function verifyClerkAdmin(request: Request, env: Env): Promise<{ userId: string } | null> {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return null;
+  const token = authHeader.substring(7).trim();
+  if (!token || !env.CLERK_SECRET_KEY) return null;
+  const { verifyToken } = await import('@clerk/backend');
+  const claims = await verifyToken(token, {
+    secretKey: env.CLERK_SECRET_KEY,
+    authorizedParties: getAuthorizedParties(env),
+  });
+  const metadata = (claims as typeof claims & { metadata?: { role?: unknown } }).metadata;
+  if (typeof claims.sub !== 'string' || metadata?.role !== 'admin') return null;
+  return { userId: claims.sub };
+}
+
 async function ensureTablesExist(db: D1Database) {
-  const statements = [
-    `CREATE TABLE IF NOT EXISTS news (
+  try {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS news (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         slug TEXT UNIQUE NOT NULL,
@@ -141,8 +80,9 @@ async function ensureTablesExist(db: D1Database) {
         published_at TEXT NOT NULL DEFAULT (datetime('now')),
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      )`,
-    `CREATE TABLE IF NOT EXISTS events (
+      );
+
+      CREATE TABLE IF NOT EXISTS events (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         slug TEXT UNIQUE NOT NULL,
@@ -156,8 +96,9 @@ async function ensureTablesExist(db: D1Database) {
         status TEXT NOT NULL DEFAULT 'upcoming',
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      )`,
-    `CREATE TABLE IF NOT EXISTS gallery (
+      );
+
+      CREATE TABLE IF NOT EXISTS gallery (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         caption TEXT NOT NULL DEFAULT '',
@@ -166,13 +107,29 @@ async function ensureTablesExist(db: D1Database) {
         storage_key TEXT NOT NULL DEFAULT '',
         display_order INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
-      )`,
-    'CREATE UNIQUE INDEX IF NOT EXISTS idx_news_slug ON news(slug)',
-    'CREATE UNIQUE INDEX IF NOT EXISTS idx_events_slug ON events(slug)',
-    'CREATE UNIQUE INDEX IF NOT EXISTS idx_gallery_storage_key ON gallery(storage_key)',
-  ];
-  for (const statement of statements) {
-    await db.prepare(statement).run();
+      );
+
+      CREATE TABLE IF NOT EXISTS media_storage (
+        key TEXT PRIMARY KEY,
+        content_type TEXT NOT NULL,
+        data_base64 TEXT NOT NULL,
+        size INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS site_content (
+        id TEXT PRIMARY KEY,
+        content_json TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_news_slug ON news(slug);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_events_slug ON events(slug);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_gallery_storage_key ON gallery(storage_key);
+      CREATE INDEX IF NOT EXISTS idx_media_storage_key ON media_storage(key);
+    `);
+  } catch (err) {
+    console.error('[Worker DB Init Error]:', err);
   }
 }
 
@@ -188,64 +145,159 @@ export default {
       return new Response(null, { headers: cors, status: 204 });
     }
 
-    try {
-      // Better Auth owns its CSRF checks, origin validation, and HttpOnly session cookies.
-      if (url.pathname.startsWith('/api/auth/')) {
-        if (url.pathname === '/api/auth/bootstrap-admin' && method === 'POST') {
-          return await bootstrapFirstAdmin(request, env, cors);
-        }
-        const auth = createAuth(env as Env & AuthEnv);
-        const response = await auth.handler(request);
-        const headers = new Headers(response.headers);
-        for (const [key, value] of Object.entries(cors)) headers.set(key, value);
-        return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+    let administrator: { userId: string } | null = null;
+    if (url.pathname.startsWith('/api/admin/')) {
+      if (!env.CLERK_SECRET_KEY || !env.CLERK_AUTHORIZED_PARTIES?.trim()) {
+        return errorResponse('Admin authentication is not configured on this Worker.', 503, cors);
       }
+      try {
+        administrator = await verifyClerkAdmin(request, env);
+      } catch {
+        return errorResponse('A valid Clerk administrator session is required.', 401, cors);
+      }
+      if (!administrator) return errorResponse('A valid Clerk administrator session is required.', 401, cors);
+    }
 
+    try {
       await ensureTablesExist(env.DB);
 
-      // All CMS endpoints require a real Better Auth database session and admin role.
-      // Frontend checks are only for navigation; this server check protects every operation.
-      if (url.pathname.startsWith('/api/admin/')) {
-        const auth = createAuth(env as Env & AuthEnv);
-        const session = await auth.api.getSession({ headers: request.headers });
-        if (!session) return errorResponse('Authentication required', 401, cors);
-        if (url.pathname === '/api/admin/session' && method === 'GET') {
-          const headers = new Headers(cors);
-          headers.set('Content-Type', 'application/json');
-          return new Response(JSON.stringify({
-            success: true,
-            data: { id: session.user.id, name: session.user.name, email: session.user.email, role: session.user.role },
-          }), { status: 200, headers });
+      if (url.pathname === '/api/admin/session' && method === 'GET' && administrator) {
+        return jsonResponse({ success: true, userId: administrator.userId, role: 'admin' }, 200, cors);
+      }
+
+      if (url.pathname === '/api/site-content' && method === 'GET') {
+        const row = await env.DB.prepare("SELECT content_json FROM site_content WHERE id = 'main'").first<{ content_json: string }>();
+        return jsonResponse({ success: true, data: row ? JSON.parse(row.content_json) : null }, 200, cors);
+      }
+
+      if (url.pathname === '/api/admin/site-content' && method === 'GET') {
+        const row = await env.DB.prepare("SELECT content_json, updated_at FROM site_content WHERE id = 'main'").first<{ content_json: string; updated_at: string }>();
+        return jsonResponse({ success: true, data: row ? JSON.parse(row.content_json) : null, updatedAt: row?.updated_at ?? null }, 200, cors);
+      }
+
+      if (url.pathname === '/api/admin/site-content' && method === 'PUT') {
+        let payload: { text?: unknown; programs?: unknown };
+        try {
+          payload = await request.json() as typeof payload;
+        } catch {
+          return errorResponse('Invalid content document.', 400, cors);
         }
-        if (session.user.role !== 'admin') return errorResponse('Administrator access required', 403, cors);
+        if (!payload || !payload.text || typeof payload.text !== 'object' || Array.isArray(payload.text) || !Array.isArray(payload.programs)) {
+          return errorResponse('Content must include editable text fields and the current program list.', 400, cors);
+        }
+        const serialized = JSON.stringify(payload);
+        if (serialized.length > 512_000) return errorResponse('Content document is too large.', 413, cors);
+        const textEntries = Object.entries(payload.text as Record<string, unknown>);
+        if (textEntries.length > 300 || textEntries.some(([key, value]) => key.length > 160 || typeof value !== 'string' || value.length > 10_000)) {
+          return errorResponse('One or more text fields are invalid or too long.', 400, cors);
+        }
+        if (textEntries.some(([key, value]) => /\.image$/i.test(key) && value !== '' && !(value.startsWith('/') || value.startsWith('https://'))) ) {
+          return errorResponse('Images must use a site path or HTTPS URL.', 400, cors);
+        }
+        const programs = payload.programs as Array<Record<string, unknown>>;
+        const slugs = new Set<string>();
+        const ids = new Set<string>();
+        for (const program of programs) {
+          if (!program || typeof program !== 'object' || typeof program.id !== 'string' || typeof program.slug !== 'string' || typeof program.code !== 'string' || typeof program.fullTitle !== 'string' || !['Nursing', 'Paramedical'].includes(String(program.category))) {
+            return errorResponse('A program is missing required identity or category fields.', 400, cors);
+          }
+            const requiredText = ['id', 'slug', 'code', 'fullTitle', 'overview', 'description', 'imageLabel', 'seoTitle', 'seoDescription'];
+            if (requiredText.some((key) => typeof program[key] !== 'string' || String(program[key]).length > 5000)) {
+              return errorResponse('A program contains invalid or overlong text.', 400, cors);
+            }
+            for (const key of ['duration', 'eligibility', 'trainingStatement']) {
+              if (program[key] !== undefined && program[key] !== null && (typeof program[key] !== 'string' || program[key].length > 2000)) {
+                return errorResponse('A program contains invalid or overlong optional text.', 400, cors);
+              }
+            }
+            for (const key of ['learningAreas', 'trainingAreas', 'careerOpportunities']) {
+              const values = program[key];
+              if (values !== undefined && (!Array.isArray(values) || values.length > 100 || values.some((item) => typeof item !== 'string' || item.length > 1000))) {
+                return errorResponse('Program lists must contain short text items.', 400, cors);
+              }
+            }
+            for (const key of ['isPrimary', 'isSubjectToApproval']) {
+              if (program[key] !== undefined && typeof program[key] !== 'boolean') return errorResponse('Program visibility settings are invalid.', 400, cors);
+            }
+            if (program.imageUrl !== undefined && program.imageUrl !== null && program.imageUrl !== '' && (typeof program.imageUrl !== 'string' || !(program.imageUrl.startsWith('/') || program.imageUrl.startsWith('https://'))) ) {
+              return errorResponse('Program images must use a site path or HTTPS URL.', 400, cors);
+            }
+          if (!/^[a-z0-9-]+$/.test(program.slug) || slugs.has(program.slug) || ids.has(program.id)) {
+            return errorResponse('Program slugs and IDs must be unique and slugs may contain only lowercase letters, numbers, and hyphens.', 400, cors);
+          }
+          slugs.add(program.slug);
+          ids.add(program.id);
+        }
+        if (programs.length === 0 || programs.length > 100) return errorResponse('The program list must contain between 1 and 100 entries.', 400, cors);
+        await env.DB.prepare(`
+          INSERT INTO site_content (id, content_json, updated_at)
+          VALUES ('main', ?, datetime('now'))
+          ON CONFLICT(id) DO UPDATE SET content_json = excluded.content_json, updated_at = datetime('now')
+        `).bind(serialized).run();
+        return jsonResponse({ success: true, updatedAt: new Date().toISOString() }, 200, cors);
+      }
+
+      if (url.pathname === '/api/admin/media' && method === 'GET' && administrator) {
+        const bucket = getR2Bucket(env);
+        const cursor = url.searchParams.get('cursor') || undefined;
+        const listing = await bucket.list({ limit: 100, cursor });
+        const assets = listing.objects.map((object) => ({
+          key: object.key,
+          url: `${url.origin}/api/images/${object.key.split('/').map(encodeURIComponent).join('/')}`,
+          size: object.size,
+          uploaded: object.uploaded.toISOString(),
+        }));
+        return jsonResponse({ success: true, data: assets, cursor: listing.truncated ? listing.cursor : null }, 200, cors);
       }
 
       // ----------------------------------------------------
-      // 1. R2 IMAGE SERVING (/api/images/*)
+      // 1. IMAGE SERVING (/api/images/*) - Dual R2 & D1 Storage
       // ----------------------------------------------------
       if (url.pathname.startsWith('/api/images/')) {
-        const key = url.pathname.replace('/api/images/', '');
-        if (!key) return errorResponse('Image key missing', 400, cors);
+        const rawKey = url.pathname.replace(/^\/api\/images\//, '');
+        if (!rawKey) return errorResponse('Image key missing', 400, cors);
+        const key = decodeURIComponent(rawKey);
 
+        // A. Try R2 storage first if available
         try {
           const bucket = getR2Bucket(env);
-          const object = await bucket.get(key);
-          if (!object) {
-            console.warn(`[Worker R2]: Image key not found: ${key}`);
-            return errorResponse('Image not found in R2 storage', 404, cors);
+          const object = await bucket.get(rawKey) || await bucket.get(key);
+          if (object) {
+            const headers = new Headers();
+            object.writeHttpMetadata(headers);
+            headers.set('etag', object.httpEtag);
+            headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+            Object.entries(cors).forEach(([k, v]) => headers.set(k, v));
+            return new Response(object.body, { headers });
           }
-
-          const headers = new Headers();
-          object.writeHttpMetadata(headers);
-          headers.set('etag', object.httpEtag);
-          headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-          Object.entries(cors).forEach(([k, v]) => headers.set(k, v));
-
-          return new Response(object.body, { headers });
-        } catch (err: any) {
-          console.warn('[Worker R2 Get Fallback]:', err.message);
-          return errorResponse('R2 Object Unavailable', 404, cors);
+        } catch {
+          // R2 storage not configured or object unavailable, fall through to D1 media_storage
         }
+
+        // B. Fall back to D1 media_storage table
+        try {
+          const row = await env.DB.prepare(
+            'SELECT content_type, data_base64 FROM media_storage WHERE key = ? OR key = ? LIMIT 1'
+          ).bind(rawKey, key).first<{ content_type: string; data_base64: string }>();
+
+          if (row && row.data_base64) {
+            const binary = atob(row.data_base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+              bytes[i] = binary.charCodeAt(i);
+            }
+            const headers = new Headers({
+              'Content-Type': row.content_type || 'image/jpeg',
+              'Cache-Control': 'public, max-age=31536000, immutable',
+            });
+            Object.entries(cors).forEach(([k, v]) => headers.set(k, v));
+            return new Response(bytes, { headers });
+          }
+        } catch (d1Err) {
+          console.warn('[Worker D1 Media Fetch Error]:', d1Err);
+        }
+
+        return errorResponse('Image not found in storage', 404, cors);
       }
 
       // ----------------------------------------------------
@@ -312,48 +364,109 @@ export default {
       }
 
       // ----------------------------------------------------
-      // 4. ADMIN MUTATION ENDPOINTS (server-side Better Auth role check above)
+      // 4. ADMIN MUTATION ENDPOINTS (Server-Side Clerk Token Verification)
       // ----------------------------------------------------
-
-      // POST /api/admin/upload - Image upload to R2
+      // POST /api/admin/upload - Image upload with R2 + D1 dual persistence
       if (method === 'POST' && url.pathname === '/api/admin/upload') {
-        const formData = await request.formData();
-        const file = formData.get('file') as File | null;
-        const folder = (formData.get('folder') as string) || 'general';
+        const contentTypeHeader = request.headers.get('Content-Type') || '';
+        let fileBuffer: ArrayBuffer;
+        let fileType = 'image/jpeg';
+        let fileName = 'upload.jpg';
+        let folder = 'general';
 
-        if (!file) return errorResponse('No file uploaded', 400, cors);
+        if (contentTypeHeader.includes('application/json')) {
+          const body = (await request.json()) as any;
+          if (!body.data || typeof body.data !== 'string') {
+            return errorResponse('Image data is required', 400, cors);
+          }
+          folder = body.folder || 'general';
+          fileName = body.name || 'image.jpg';
+          const match = body.data.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            fileType = match[1];
+            const binary = atob(match[2]);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            fileBuffer = bytes.buffer;
+          } else {
+            return errorResponse('Invalid base64 image data', 400, cors);
+          }
+        } else {
+          const formData = await request.formData();
+          const file = formData.get('file') as File | null;
+          folder = (formData.get('folder') as string) || 'general';
 
-        if (!ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
-          return errorResponse('Invalid file type. Only JPG, JPEG, PNG, and WebP images are permitted.', 400, cors);
-        }
+          if (!file) return errorResponse('No file uploaded', 400, cors);
 
-        if (file.size > MAX_FILE_SIZE) {
-          return errorResponse('File size exceeds the 10MB limit.', 400, cors);
+          if (!ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
+            return errorResponse('Invalid file type. Only JPG, JPEG, PNG, and WebP images are permitted.', 400, cors);
+          }
+
+          if (file.size > MAX_FILE_SIZE) {
+            return errorResponse('File size exceeds the 10MB limit.', 400, cors);
+          }
+
+          fileType = file.type;
+          fileName = file.name;
+          fileBuffer = await file.arrayBuffer();
         }
 
         const sanitizedFolder = folder.replace(/^\/+|\/+$/g, '');
-        const extension = file.name.split('.').pop() || 'jpg';
+        const extension = fileName.split('.').pop() || 'jpg';
         const uniqueId = crypto.randomUUID();
         const storageKey = `${sanitizedFolder}/${Date.now()}_${uniqueId}.${extension}`;
 
-        // Build absolute URL using the worker's own origin so images resolve
-        // correctly regardless of which domain the frontend is served from.
         const workerOrigin = `${url.protocol}//${url.host}`;
         const absolutePublicUrl = `${workerOrigin}/api/images/${storageKey}`;
 
+        // 1. Try R2 storage first
+        let saved = false;
         try {
           const bucket = getR2Bucket(env);
-          await bucket.put(storageKey, await file.arrayBuffer(), {
+          await bucket.put(storageKey, fileBuffer, {
             httpMetadata: {
-              contentType: file.type,
+              contentType: fileType,
             },
           });
+          saved = true;
           console.log(`[Worker R2 Upload Success]: Stored image at key ${storageKey}`);
-          return jsonResponse({ success: true, url: absolutePublicUrl, key: storageKey, storage_key: storageKey }, 200, cors);
-        } catch (err: any) {
-          console.warn('[Worker R2 Put Fallback]: R2 not available, storing dummy key.');
-          return jsonResponse({ success: true, url: absolutePublicUrl, key: storageKey, storage_key: storageKey }, 200, cors);
+        } catch (r2Err) {
+          console.warn('[Worker R2 Upload Unavailable/Failed]:', r2Err);
         }
+
+        // 2. Fallback to D1 media_storage table
+        if (!saved) {
+          try {
+            const bytes = new Uint8Array(fileBuffer);
+            let binary = '';
+            const chunkSize = 8192;
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+              binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
+            }
+            const base64 = btoa(binary);
+
+            await env.DB.prepare(
+              `INSERT INTO media_storage (key, content_type, data_base64, size)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(key) DO UPDATE SET data_base64 = excluded.data_base64, content_type = excluded.content_type`
+            ).bind(storageKey, fileType, base64, bytes.length).run();
+            saved = true;
+            console.log(`[Worker D1 Media Upload Success]: Stored image at key ${storageKey} (${bytes.length} bytes)`);
+          } catch (d1Err) {
+            console.error('[Worker D1 Media Storage Failed]:', d1Err);
+          }
+        }
+
+        if (!saved) {
+          return errorResponse('Image storage is unavailable. The image could not be saved.', 503, cors);
+        }
+
+        return jsonResponse({
+          success: true,
+          url: absolutePublicUrl,
+          key: storageKey,
+          storage_key: storageKey,
+        }, 200, cors);
       }
 
       // DELETE /api/admin/upload - Delete image from R2
@@ -365,8 +478,12 @@ export default {
           const bucket = getR2Bucket(env);
           await bucket.delete(storageKey);
           console.log(`[Worker R2 Delete Success]: Removed key ${storageKey}`);
-        } catch (_) {}
-        return jsonResponse({ success: true, message: 'Image deleted from R2' }, 200, cors);
+        } catch {}
+        try {
+          await env.DB.prepare('DELETE FROM media_storage WHERE key = ?').bind(storageKey).run();
+          console.log(`[Worker D1 Media Delete Success]: Removed key ${storageKey}`);
+        } catch {}
+        return jsonResponse({ success: true, message: 'Image deleted from storage' }, 200, cors);
       }
 
       // --- NEWS CRUD ---
@@ -504,7 +621,32 @@ export default {
 
         const maxOrderRow = await env.DB.prepare('SELECT MAX(display_order) as maxOrder FROM gallery').first();
         const nextOrder = (maxOrderRow?.maxOrder as number || 0) + 1;
-        const storageKey = body.storage_key || body.r2_key || '';
+        let storageKey = body.storage_key || body.r2_key || '';
+        let imageUrl = body.image_url || '';
+
+        // If a base64 Data URL was passed directly in body.image_url, store it into media_storage
+        if (imageUrl.startsWith('data:image/')) {
+          try {
+            const match = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
+            if (match) {
+              const mime = match[1];
+              const ext = mime.split('/')[1] || 'jpg';
+              if (!storageKey) {
+                storageKey = `gallery/${body.category || 'campus'}/${Date.now()}_${id}.${ext}`;
+              }
+              const binary = atob(match[2]);
+              await env.DB.prepare(
+                `INSERT INTO media_storage (key, content_type, data_base64, size)
+                 VALUES (?, ?, ?, ?)
+                 ON CONFLICT(key) DO UPDATE SET data_base64 = excluded.data_base64, content_type = excluded.content_type`
+              ).bind(storageKey, mime, match[2], binary.length).run();
+              const workerOrigin = `${url.protocol}//${url.host}`;
+              imageUrl = `${workerOrigin}/api/images/${storageKey}`;
+            }
+          } catch (embedErr) {
+            console.warn('[Worker D1 Auto-Embed Data URL Error]:', embedErr);
+          }
+        }
 
         await env.DB.prepare(
           `INSERT INTO gallery (id, title, caption, category, image_url, storage_key, display_order)
@@ -514,13 +656,13 @@ export default {
           body.title || 'Campus Photo',
           body.caption || '',
           body.category || 'campus',
-          body.image_url,
+          imageUrl,
           storageKey,
           body.display_order ?? nextOrder
         ).run();
 
         console.log(`[Worker D1 Gallery Item Added]: ${id}`);
-        return jsonResponse({ success: true, id, message: 'Gallery item added' }, 201, cors);
+        return jsonResponse({ success: true, id, image_url: imageUrl, message: 'Gallery item added' }, 201, cors);
       }
 
       if (method === 'PUT' && url.pathname === '/api/admin/gallery/reorder') {
@@ -538,15 +680,26 @@ export default {
         const id = url.pathname.replace('/api/admin/gallery/', '');
         const body = (await request.json()) as any;
 
+        let extraSql = '';
+        const params: any[] = [body.title, body.caption, body.category];
+
+        if (body.image_url) {
+          extraSql += ', image_url = ?';
+          params.push(body.image_url);
+        }
+        if (body.storage_key || body.r2_key) {
+          extraSql += ', storage_key = ?';
+          params.push(body.storage_key || body.r2_key);
+        }
+        if (body.display_order !== undefined) {
+          extraSql += ', display_order = ?';
+          params.push(body.display_order);
+        }
+        params.push(id);
+
         await env.DB.prepare(
-          `UPDATE gallery SET title = ?, caption = ?, category = ?, display_order = ? WHERE id = ?`
-        ).bind(
-          body.title,
-          body.caption,
-          body.category,
-          body.display_order ?? 0,
-          id
-        ).run();
+          `UPDATE gallery SET title = ?, caption = ?, category = ? ${extraSql} WHERE id = ?`
+        ).bind(...params).run();
 
         console.log(`[Worker D1 Gallery Item Updated]: ${id}`);
         return jsonResponse({ success: true, message: 'Gallery item updated' }, 200, cors);
@@ -554,12 +707,15 @@ export default {
 
       if (method === 'DELETE' && url.pathname.startsWith('/api/admin/gallery/')) {
         const id = url.pathname.replace('/api/admin/gallery/', '');
-        const item = await env.DB.prepare('SELECT storage_key FROM gallery WHERE id = ?').bind(id).first();
+        const item = await env.DB.prepare('SELECT storage_key FROM gallery WHERE id = ?').bind(id).first<{ storage_key: string }>();
         if (item && item.storage_key) {
           try {
             const bucket = getR2Bucket(env);
-            await bucket.delete(item.storage_key as string);
-          } catch (_) {}
+            await bucket.delete(item.storage_key);
+          } catch {}
+          try {
+            await env.DB.prepare('DELETE FROM media_storage WHERE key = ?').bind(item.storage_key).run();
+          } catch {}
         }
         await env.DB.prepare('DELETE FROM gallery WHERE id = ?').bind(id).run();
         console.log(`[Worker D1 Gallery Item Deleted]: ${id}`);

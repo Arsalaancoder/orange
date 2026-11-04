@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAdminAuth } from '@/auth/adminAuth';
 import { api } from '@/services/api';
 import type { NewsItem, EventItem, GalleryItem } from '@/services/api';
 import { Card } from '@/components/admin/ui/card';
@@ -21,6 +22,7 @@ import { motion } from 'framer-motion';
 import { softPopUpVariant, staggeredContainerVariant } from '@/lib/motionVariants';
 
 export const AdminDashboardPage: React.FC = () => {
+  const { getToken } = useAdminAuth();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
@@ -32,16 +34,17 @@ export const AdminDashboardPage: React.FC = () => {
 
     const loadDashboardData = async () => {
       try {
+        const token = await getToken();
         const [newsData, eventsData, galleryData] = await Promise.all([
-          api.getAdminNews().catch((e) => {
+          api.getAdminNews(token || undefined).catch((e) => {
             console.warn('News fetch warning:', e);
             return [];
           }),
-          api.getAdminEvents().catch((e) => {
+          api.getAdminEvents(token || undefined).catch((e) => {
             console.warn('Events fetch warning:', e);
             return [];
           }),
-          api.getAdminGallery().catch((e) => {
+          api.getAdminGallery(token || undefined).catch((e) => {
             console.warn('Gallery fetch warning:', e);
             return [];
           }),

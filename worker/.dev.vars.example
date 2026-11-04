@@ -1,4 +1,1 @@
-BETTER_AUTH_SECRET=replace-with-a-random-secret-at-least-32-characters
-BETTER_AUTH_URL=http://localhost:8787
-AUTH_TRUSTED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:8787
-BOOTSTRAP_ADMIN_CODE=replace-with-a-random-one-time-code-at-least-32-characters
+CLERK_SECRET_KEY=

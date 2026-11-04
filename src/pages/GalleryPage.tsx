@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { PageShell } from '@/components/layout/PageShell';
 import { Container } from '@/components/shared/Container';
 import { SectionHeading } from '@/components/shared/SectionHeading';
-import { api } from '@/services/api';
+import { api, resolveImageUrl } from '@/services/api';
 import type { GalleryItem } from '@/services/api';
 import { ImagePlaceholder } from '@/components/shared/ImagePlaceholder';
 import { Loader2, X, ZoomIn } from 'lucide-react';
@@ -89,7 +89,7 @@ export const GalleryPage: React.FC = () => {
                   <div className="relative rounded-2xl overflow-hidden border border-[#E3E6E5] shadow-xs hover:shadow-xl transition-all duration-300">
                     <ImagePlaceholder
                       label={item.title}
-                      imageUrl={item.image_url}
+                      imageUrl={resolveImageUrl(item.image_url)}
                       aspectRatio="4:3"
                     />
                     <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-5 text-white">
@@ -130,7 +130,7 @@ export const GalleryPage: React.FC = () => {
 
               <div className="max-h-[75vh] bg-black flex items-center justify-center">
                 <img
-                  src={lightboxImage.image_url}
+                  src={resolveImageUrl(lightboxImage.image_url)}
                   alt={lightboxImage.title}
                   className="max-h-[75vh] w-auto max-w-full object-contain"
                 />

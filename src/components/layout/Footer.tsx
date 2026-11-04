@@ -4,8 +4,11 @@ import { siteConfig } from '@/config/site';
 import { Container } from '@/components/shared/Container';
 import { Logo } from './Logo';
 import { MapPin, Phone, ArrowUpRight } from 'lucide-react';
+import { useSiteContent } from '@/context/SiteContentContext';
 
 export const Footer: React.FC = () => {
+  const { content } = useSiteContent();
+  const text = content.text;
   const currentYear = new Date().getFullYear();
 
   const programLinks = [
@@ -99,7 +102,7 @@ export const Footer: React.FC = () => {
                     Campus Address
                   </span>
                   <span className="text-xs text-gray-300 leading-relaxed block">
-                    {siteConfig.address.fullText}
+                    {text['contact.address']}
                   </span>
                 </div>
               </div>
@@ -111,21 +114,18 @@ export const Footer: React.FC = () => {
                     Admissions Helpline
                   </span>
                   <div className="text-xs text-gray-300 space-x-3">
-                    <a href={`tel:${siteConfig.contact.primaryPhone}`} className="hover:text-[#F26A21] transition-colors">
-                      {siteConfig.contact.primaryPhone}
+                    <a href={`tel:${text['contact.phonePrimary']}`} className="hover:text-[#F26A21] transition-colors">
+                      {text['contact.phonePrimary']}
                     </a>
-                    <span>|</span>
-                    <a href={`tel:${siteConfig.contact.secondaryPhone}`} className="hover:text-[#F26A21] transition-colors">
-                      {siteConfig.contact.secondaryPhone}
-                    </a>
+                    {text['contact.phoneSecondary'] && <><span>|</span><a href={`tel:${text['contact.phoneSecondary']}`} className="hover:text-[#F26A21] transition-colors">{text['contact.phoneSecondary']}</a></>}
                   </div>
                 </div>
               </div>
 
               {/* Render email ONLY if non-null in siteConfig */}
-              {siteConfig.contact.email && (
+              {text['contact.email'] && (
                 <div className="text-xs text-gray-300 pt-1">
-                  Email: <a href={`mailto:${siteConfig.contact.email}`} className="text-white hover:text-[#F26A21]">{siteConfig.contact.email}</a>
+                  Email: <a href={`mailto:${text['contact.email']}`} className="text-white hover:text-[#F26A21]">{text['contact.email']}</a>
                 </div>
               )}
             </div>

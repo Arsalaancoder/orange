@@ -5,7 +5,8 @@ import { Container } from '@/components/shared/Container';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { SEO } from '@/components/shared/SEO';
 import { collegesData } from '@/data/colleges';
-import { programsData, type Program } from '@/data/programs';
+import type { Program } from '@/data/programs';
+import { useSiteContent } from '@/context/SiteContentContext';
 import { CollegeCard } from '@/components/colleges/CollegeCard';
 import {
   MapPin, ShieldCheck, ArrowRight, CheckCircle2, Phone, Mail,
@@ -21,6 +22,7 @@ import {
 
 export const CollegeDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { content } = useSiteContent();
   const college = collegesData.find(c => c.slug === slug);
 
   // Scroll Progress setup
@@ -57,7 +59,7 @@ export const CollegeDetailPage: React.FC = () => {
   }
 
   // Programs offered at this institution
-  const institutionPrograms: Program[] = programsData.filter(p => college.programs.includes(p.slug));
+  const institutionPrograms: Program[] = content.programs.filter(p => college.programs.includes(p.slug));
 
   // Related institutions (for bottom directory)
   const relatedColleges = collegesData

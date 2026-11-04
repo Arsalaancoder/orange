@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { programsData } from '@/data/programs';
+import { useSiteContent } from '@/context/SiteContentContext';
 import {
   GraduationCap, Stethoscope, Microscope, Activity, ArrowRight,
   ShieldCheck, Clock
@@ -18,6 +18,8 @@ const dropdownVariant = {
 };
 
 export const ProgramsMegaMenu: React.FC<ProgramsMegaMenuProps> = ({ onClose }) => {
+  const { content } = useSiteContent();
+  const programsData = content.programs;
   const nursingDegrees = programsData.filter(p => p.slug === 'bsc-nursing');
   const nursingDiplomas = programsData.filter(p => p.slug === 'gnm');
   const paramedicalPrimary = programsData.filter(p => p.category === 'Paramedical' && ['dmlt', 'doa', 'dmit'].includes(p.slug));

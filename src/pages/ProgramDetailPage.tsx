@@ -9,13 +9,15 @@ import { ImagePlaceholder } from '@/components/shared/ImagePlaceholder';
 import { SectionHeading } from '@/components/shared/SectionHeading';
 import { ProgramCard } from '@/components/programs/ProgramCard';
 import { ProgramKeyStatsCards } from '@/components/programs/ProgramKeyStatsCards';
-import { programsData } from '@/data/programs';
+import { useSiteContent } from '@/context/SiteContentContext';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { CheckCircle2, AlertCircle, BookOpen, HeartPulse, Building2 } from 'lucide-react';
 import { Reveal } from '@/components/animations/Reveal';
 
 export const ProgramDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { content } = useSiteContent();
+  const programsData = content.programs;
 
   // Resolve program by slug (handle bsc-nursing & b-sc-nursing alias)
   const program = programsData.find(

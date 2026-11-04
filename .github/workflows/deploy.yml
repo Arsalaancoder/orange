@@ -28,64 +28,38 @@ jobs:
       - name: Build production website
         run: npm run build
         env:
-          VITE_API_URL: https://api.orangecolleges.com/api
-          VITE_API_BASE_URL: https://api.orangecolleges.com/api
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          VITE_API_URL: https://orange-paramedical-api.orange-paramedical.workers.dev/api
+          VITE_API_BASE_URL: https://orange-paramedical-api.orange-paramedical.workers.dev/api
 
       - name: Validate deployment secrets
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
             echo "::error::Missing repository Actions secret CLOUDFLARE_API_TOKEN."
             exit 1
           fi
-          if [ -z "$BETTER_AUTH_SECRET" ]; then
-            echo "::error::Missing repository Actions secret BETTER_AUTH_SECRET. Generate a high-entropy secret of at least 32 characters and add it under Settings > Secrets and variables > Actions."
+          if [ -z "$VITE_CLERK_PUBLISHABLE_KEY" ]; then
+            echo "::error::Missing Actions secret VITE_CLERK_PUBLISHABLE_KEY. Add the production Clerk pk_live_ publishable key."
             exit 1
           fi
-          if [ "${#BETTER_AUTH_SECRET}" -lt 32 ]; then
-            echo "::error::BETTER_AUTH_SECRET must be at least 32 characters."
+          case "$VITE_CLERK_PUBLISHABLE_KEY" in pk_live_*) ;; *) echo "::error::VITE_CLERK_PUBLISHABLE_KEY must be a production pk_live_ key."; exit 1;; esac
+          if [ -z "$CLERK_SECRET_KEY" ]; then
+            echo "::error::Missing Actions secret CLERK_SECRET_KEY. Add the production Clerk secret key; it is deployed only to the API Worker."
             exit 1
           fi
+          case "$CLERK_SECRET_KEY" in sk_live_*) ;; *) echo "::error::CLERK_SECRET_KEY must be a live Clerk secret key."; exit 1;; esac
 
-      - name: Back up production D1 before migration
+      - name: Set Clerk secret on API Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          npx wrangler d1 export orange-paramedical-db --remote --skip-confirmation --output "$RUNNER_TEMP/orange-paramedical-db-backup.sql" --config worker/wrangler.jsonc
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+        run: printf '%s' "$CLERK_SECRET_KEY" | npx wrangler secret put CLERK_SECRET_KEY --config worker/wrangler.jsonc
 
-      - name: Store recoverable database backup
-        uses: actions/upload-artifact@v4
-        with:
-          name: orange-paramedical-db-backup-${{ github.sha }}
-          path: ${{ runner.temp }}/orange-paramedical-db-backup.sql
-          retention-days: 7
-          if-no-files-found: error
-
-      - name: Apply additive Better Auth D1 migration
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npx wrangler d1 migrations apply orange-paramedical-db --remote --config worker/wrangler.jsonc
-
-      - name: Set Better Auth Worker secret
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-        run: printf '%s' "$BETTER_AUTH_SECRET" | npx wrangler secret put BETTER_AUTH_SECRET --config worker/wrangler.jsonc
-
-      - name: Set optional initial administrator setup code
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          BOOTSTRAP_ADMIN_CODE: ${{ secrets.BOOTSTRAP_ADMIN_CODE }}
-        run: |
-          if [ -n "$BOOTSTRAP_ADMIN_CODE" ]; then
-            printf '%s' "$BOOTSTRAP_ADMIN_CODE" | npx wrangler secret put BOOTSTRAP_ADMIN_CODE --config worker/wrangler.jsonc
-          else
-            echo "BOOTSTRAP_ADMIN_CODE is not configured; initial-admin signup remains unavailable."
-          fi
-
-      - name: Deploy Better Auth API Worker
+      - name: Deploy Clerk API Worker
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

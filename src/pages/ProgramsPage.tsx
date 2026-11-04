@@ -6,7 +6,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { ImagePlaceholder } from '@/components/shared/ImagePlaceholder';
-import { programsData } from '@/data/programs';
+import { useSiteContent } from '@/context/SiteContentContext';
 import { ProgramCard } from '@/components/programs/ProgramCard';
 import { Reveal } from '@/components/animations/Reveal';
 import { StaggerContainer, StaggerItem } from '@/components/animations/Stagger';
@@ -15,6 +15,8 @@ import { Link } from 'react-router-dom';
 import { ProgramCareerCardsSection } from '@/components/programs/ProgramCareerCardsSection';
 
 export const ProgramsPage: React.FC = () => {
+  const { content } = useSiteContent();
+  const programsData = content.programs;
   const primaryPrograms = programsData.filter(p => p.isPrimary);
   const secondaryPrograms = programsData.filter(p => !p.isPrimary);
 
@@ -40,13 +42,13 @@ export const ProgramsPage: React.FC = () => {
 
               <Reveal variant="fadeUp" delay={0.1}>
                 <h1 className="heading-hero text-[#202426] tracking-tight font-extrabold max-w-2xl">
-                  Build Your Future <span className="text-[#202426] block mt-1">in <span className="text-[#F26A21]">Healthcare.</span></span>
+                  {content.text['programs.hero.title']} <span className="text-[#202426] block mt-1"><span className="text-[#F26A21]">{content.text['programs.hero.highlight']}</span></span>
                 </h1>
               </Reveal>
 
               <Reveal variant="fadeUp" delay={0.2}>
                 <p className="text-base md:text-lg lg:text-xl text-[#667085] leading-relaxed max-w-xl">
-                  Explore professional education in Nursing, Paramedical Sciences and Allied Healthcare through academic learning, practical training and skill development.
+                  {content.text['programs.hero.description']}
                 </p>
               </Reveal>
 
@@ -80,9 +82,9 @@ export const ProgramsPage: React.FC = () => {
         <Container>
           <div className="mb-12">
             <SectionHeading
-              eyebrow="Curriculum Catalog"
-              title="Primary Healthcare Programs"
-              subtitle="Explore degree and diploma offerings focused on classroom instruction, laboratory practice, and clinical training."
+              eyebrow={content.text['programs.catalog.eyebrow']}
+              title={content.text['programs.catalog.title']}
+              subtitle={content.text['programs.catalog.description']}
               className="mb-0 max-w-2xl"
             />
           </div>
@@ -106,17 +108,17 @@ export const ProgramsPage: React.FC = () => {
                   <span>ALLIED TECHNICAL OFFERINGS</span>
                 </div>
                 <h2 className="heading-subsection text-[#202426] mb-3">
-                  Other Paramedical & Allied Healthcare Programs
+                  {content.text['programs.allied.title']}
                 </h2>
                 <p className="text-sm md:text-base text-[#667085] max-w-3xl leading-relaxed">
-                  Specialized allied health technology programs offered or planned by Orange Group institutions.
+                  {content.text['programs.allied.description']}
                 </p>
 
                 {/* Regulatory Disclaimer Notice */}
                 <div className="mt-4 p-4 rounded-xl bg-[#FAFAF8] border border-[#E3E6E5] flex items-start gap-3 max-w-3xl">
                   <AlertCircle className="w-4 h-4 text-[#F26A21] shrink-0 mt-0.5" />
                   <p className="text-xs text-[#667085] leading-relaxed">
-                    Course availability, duration, eligibility, intake, and recognition are subject to applicable regulatory and affiliating authorities. Please contact the admissions office for current details.
+                    {content.text['programs.disclaimer']}
                   </p>
                 </div>
               </div>

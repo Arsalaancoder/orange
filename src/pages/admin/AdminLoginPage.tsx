@@ -1,66 +1,92 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Eye, EyeOff, Loader2, LockKeyhole } from 'lucide-react';
-import { authClient } from '@/auth/authClient';
+import { useAdminAuth } from '@/auth/adminAuth';
+import {
+  LockKeyhole,
+  Eye,
+  EyeOff,
+  Loader2,
+  AlertTriangle,
+  User,
+  Mail,
+  ShieldCheck,
+  CheckCircle2,
+} from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
-  const { data: session, isPending } = authClient.useSession();
+  const { isLoaded, isSignedIn, signIn, signUp } = useAdminAuth();
   const navigate = useNavigate();
+
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [setupCode, setSetupCode] = useState('');
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
-  if (!isPending && session?.user.role === 'admin') {
+  // Already signed in → go straight to dashboard
+  if (isLoaded && isSignedIn) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
+    setSuccessMessage('');
     setIsSubmitting(true);
-    try {
-      if (isCreatingAccount) {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api'}/auth/bootstrap-admin`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: name.trim(), email: email.trim(), password, setupCode }),
-        });
-        const data = await response.json() as { message?: string; error?: string; user?: { role?: string } };
-        if (!response.ok) throw new Error(data.message || data.error || 'Administrator setup could not be completed.');
-        if (data.user?.role !== 'admin') throw new Error('Administrator setup could not be verified. Please sign in.');
-        await authClient.getSession();
-        navigate('/admin/dashboard', { replace: true });
-        return;
-      }
 
-      const result = await authClient.signIn.email({ email: email.trim(), password, callbackURL: '/admin/dashboard' });
-      if (result.error) {
-        const status = Number(result.error.status);
-        if (status === 401) throw new Error('Invalid email or password.');
-        if (status >= 500) throw new Error('The authentication service is unavailable. Please try again shortly.');
-        throw new Error('Sign-in could not be completed. Check the information and try again.');
+    try {
+      if (mode === 'signup') {
+        if (!name.trim()) {
+          throw new Error('Please enter your full administrator name.');
+        }
+        if (!email.trim() || !email.includes('@')) {
+          throw new Error('Please enter a valid administrator email address.');
+        }
+        if (password.length < 6) {
+          throw new Error('Password must be at least 6 characters long.');
+        }
+        if (password !== confirmPassword) {
+          throw new Error('Passwords do not match. Please re-enter your password.');
+        }
+
+        const res = await signUp(name.trim(), email.trim(), password);
+        if (!res.success) {
+          throw new Error(res.error || 'Failed to create administrator account.');
+        }
+
+        setSuccessMessage('Administrator account created successfully! Redirecting...');
+        setTimeout(() => {
+          navigate('/admin/dashboard', { replace: true });
+        }, 300);
+      } else {
+        if (!email.trim()) {
+          throw new Error('Please enter your administrator email address.');
+        }
+        if (!password) {
+          throw new Error('Please enter your password.');
+        }
+
+        const res = await signIn(email.trim(), password);
+        if (!res.success) {
+          throw new Error(res.error || 'Invalid email or password.');
+        }
+
+        setSuccessMessage('Signed in successfully! Redirecting to dashboard...');
+        setTimeout(() => {
+          navigate('/admin/dashboard', { replace: true });
+        }, 300);
       }
-      if (result.data?.user.role !== 'admin') {
-        await authClient.signOut();
-        throw new Error('This account is not authorized to access the administrator portal.');
-      }
-      navigate('/admin/dashboard', { replace: true });
-    } catch (cause) {
-      setError(cause instanceof TypeError
-        ? 'Unable to reach the authentication service. Check your connection and try again.'
-        : cause instanceof Error ? cause.message : 'Unable to sign in. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Render the existing administrator sign-in layout.
   return (
     <div className="min-h-screen bg-[#2563EB] flex items-center justify-center p-4 sm:p-6 lg:p-12 relative overflow-hidden font-sans">
       {/* Background Geometric Accent Graphics */}
@@ -111,42 +137,221 @@ export const AdminLoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Side: Administrator Sign-In Form */}
+        {/* Right Side: Administrator Sign-In & Sign-Up Form */}
         <div className="lg:col-span-6 p-8 sm:p-12 flex flex-col justify-center bg-white relative">
-          <div className="w-full max-w-sm mx-auto py-2">
-            <div className="mb-8 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-[#F26A21]"><LockKeyhole className="h-7 w-7" /></div>
-              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">Administrator Sign In</h2>
-              <p className="mt-2 text-sm text-slate-500">{isCreatingAccount ? 'Create the first administrator account with your one-time setup code.' : 'Use your administrator account.'}</p>
+          <div className="w-full max-w-md mx-auto my-auto py-2">
+            {/* Form Header */}
+            <div className="mb-6 text-center">
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-[#F26A21] shadow-xs">
+                <LockKeyhole className="h-7 w-7" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+                {mode === 'signin' ? 'Administrator Sign In' : 'Create Admin Account'}
+              </h2>
+              <p className="mt-1.5 text-xs sm:text-sm text-slate-500">
+                {mode === 'signin'
+                  ? 'Access and manage college news, events, gallery, and site content.'
+                  : 'Register a new administrator profile for Orange Paramedical CMS.'}
+              </p>
             </div>
-            {isPending && <p className="mb-4 flex items-center justify-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Checking existing session…</p>}
-            {error && <div role="alert" className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />{error}</div>}
-            <form onSubmit={submit} className="space-y-5">
-              {isCreatingAccount && <>
-                <label className="block text-sm font-semibold text-slate-700">Administrator name
-                  <input required autoComplete="name" value={name} onChange={(event) => { setName(event.target.value); setError(''); }} className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100" />
-                </label>
-                <label className="block text-sm font-semibold text-slate-700">One-time setup code
-                  <input required type="password" autoComplete="off" value={setupCode} onChange={(event) => { setSetupCode(event.target.value); setError(''); }} className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100" />
-                </label>
-              </>}
-              <label className="block text-sm font-semibold text-slate-700">Email address
-                <input required type="email" autoComplete="username" value={email} onChange={(event) => { setEmail(event.target.value); setError(''); }} className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100" />
-              </label>
-              <label className="block text-sm font-semibold text-slate-700">Password
-                <span className="relative mt-2 block">
-                  <input required minLength={12} type={showPassword ? 'text' : 'password'} autoComplete={isCreatingAccount ? 'new-password' : 'current-password'} value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 font-normal outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100" />
-                  <button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword((value) => !value)} className="absolute inset-y-0 right-3 text-slate-500 hover:text-slate-800">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button>
-                </span>
-              </label>
-              <button disabled={isSubmitting} type="submit" className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F26A21] px-5 py-3 font-bold text-white transition hover:bg-[#d85813] disabled:cursor-not-allowed disabled:opacity-60">
-                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}{isSubmitting ? 'Signing in…' : 'Sign In'}
+
+            {/* Mode Switcher Tabs */}
+            <div className="mb-6 flex p-1 bg-slate-100 rounded-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signin');
+                  setError('');
+                  setSuccessMessage('');
+                }}
+                className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all ${
+                  mode === 'signin'
+                    ? 'bg-white text-[#1E3A8A] shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                Sign In
               </button>
-              {isCreatingAccount && <p className="text-center text-xs text-slate-500">This setup is available only once. The setup code is checked by the server and never grants a second administrator.</p>}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signup');
+                  setError('');
+                  setSuccessMessage('');
+                }}
+                className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all ${
+                  mode === 'signup'
+                    ? 'bg-white text-[#1E3A8A] shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div
+                role="alert"
+                className="mb-4 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs sm:text-sm text-red-700 animate-in fade-in duration-200"
+              >
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {successMessage && (
+              <div
+                role="status"
+                className="mb-4 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs sm:text-sm text-emerald-800 animate-in fade-in duration-200"
+              >
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <span>{successMessage}</span>
+              </div>
+            )}
+
+            {/* Main Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Full Name field (Sign Up only) */}
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+                    Administrator Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                    <input
+                      required
+                      type="text"
+                      autoComplete="name"
+                      placeholder="e.g. Dr. Arsalaan"
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        setError('');
+                      }}
+                      className="w-full rounded-xl border border-slate-300 pl-10 pr-4 py-2.5 sm:py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Email Address */}
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <input
+                    required
+                    type="email"
+                    autoComplete="username"
+                    placeholder="admin@orangecolleges.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setError('');
+                    }}
+                    className="w-full rounded-xl border border-slate-300 pl-10 pr-4 py-2.5 sm:py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    required
+                    minLength={6}
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                    placeholder={mode === 'signup' ? 'Minimum 6 characters' : 'Enter your password'}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setError('');
+                    }}
+                    className="w-full rounded-xl border border-slate-300 px-4 pr-11 py-2.5 sm:py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100"
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-3.5 flex items-center text-slate-400 hover:text-slate-700 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password (Sign Up only) */}
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      required
+                      minLength={6}
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      placeholder="Re-enter your password"
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        setError('');
+                      }}
+                      className="w-full rounded-xl border border-slate-300 px-4 pr-11 py-2.5 sm:py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Submit CTA */}
+              <button
+                disabled={isSubmitting}
+                type="submit"
+                className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-[#F26A21] hover:bg-[#d85813] active:scale-[0.99] px-5 py-3 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>{mode === 'signin' ? 'Signing In…' : 'Creating Account…'}</span>
+                  </>
+                ) : (
+                  <span>{mode === 'signin' ? 'Sign In to Portal' : 'Create Admin Account'}</span>
+                )}
+              </button>
             </form>
-            <button type="button" onClick={() => { setIsCreatingAccount((value) => !value); setError(''); }} className="mt-4 w-full text-center text-sm font-semibold text-[#1E3A8A] hover:underline">
-              {isCreatingAccount ? 'Already created the account? Sign in' : 'First time here? Create the initial admin account'}
-            </button>
+
+            {/* Bottom Toggle Note */}
+            <div className="mt-5 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(mode === 'signin' ? 'signup' : 'signin');
+                  setError('');
+                  setSuccessMessage('');
+                }}
+                className="text-xs sm:text-sm font-semibold text-[#1E3A8A] hover:text-[#0284C7] hover:underline cursor-pointer"
+              >
+                {mode === 'signin'
+                  ? "Don't have an account? Sign up as admin"
+                  : 'Already have an account? Sign in'}
+              </button>
+            </div>
+
+            {/* Trust badge */}
+            <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Protected Administrator Area • Orange Paramedical Colleges</span>
+            </div>
           </div>
         </div>
       </div>

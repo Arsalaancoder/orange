@@ -6,7 +6,6 @@ export interface AuthEnv {
   BETTER_AUTH_SECRET?: string;
   BETTER_AUTH_URL?: string;
   AUTH_TRUSTED_ORIGINS?: string;
-  BOOTSTRAP_ADMIN_CODE?: string;
 }
 
 const DEFAULT_TRUSTED_ORIGINS = [

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { collegesData } from '@/data/colleges';
-import { programsData } from '@/data/programs';
-import { siteConfig } from '@/config/site';
+import { useSiteContent } from '@/context/SiteContentContext';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { Logo } from './Logo';
 import { X, ChevronDown, Phone, MapPin, ArrowRight } from 'lucide-react';
@@ -14,6 +13,8 @@ interface MobileMenuProps {
 }
 
 export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
+  const { content } = useSiteContent();
+  const programsData = content.programs;
   const location = useLocation();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
@@ -337,7 +338,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
-                  <span>Admissions: {siteConfig.contact.primaryPhone}</span>
+                  <span>Admissions: {content.text['contact.phonePrimary']}</span>
                 </div>
               </div>
 
