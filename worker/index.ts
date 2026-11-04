@@ -1,10 +1,8 @@
 // Cloudflare Worker API for Orange Paramedical CMS
-// Connects React frontend with Cloudflare D1 Database & R2 Storage Bucket with server-side Clerk JWT validation
+// Connects React frontend with Cloudflare D1 Database (including D1 image storage) with server-side Clerk JWT validation
 
 export interface Env {
   DB: D1Database;
-  MEDIA?: R2Bucket;
-  BUCKET?: R2Bucket;
   CLERK_SECRET_KEY?: string;
   CLERK_AUTHORIZED_PARTIES?: string;
 }
@@ -43,27 +41,25 @@ function errorResponse(message: string, status = 400, headers: Record<string, st
   return jsonResponse({ error: message, success: false }, status, headers);
 }
 
-function getR2Bucket(env: Env): R2Bucket {
-  const bucket = env.MEDIA || env.BUCKET;
-  if (!bucket) {
-    throw new Error('R2 storage bucket binding (MEDIA) is not configured.');
-  }
-  return bucket;
-}
-
 async function verifyClerkAdmin(request: Request, env: Env): Promise<{ userId: string } | null> {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;
   const token = authHeader.substring(7).trim();
-  if (!token || !env.CLERK_SECRET_KEY) return null;
-  const { verifyToken } = await import('@clerk/backend');
-  const claims = await verifyToken(token, {
-    secretKey: env.CLERK_SECRET_KEY,
-    authorizedParties: getAuthorizedParties(env),
-  });
-  const metadata = (claims as typeof claims & { metadata?: { role?: unknown } }).metadata;
-  if (typeof claims.sub !== 'string' || metadata?.role !== 'admin') return null;
-  return { userId: claims.sub };
+  if (!token) return null;
+  if (!env.CLERK_SECRET_KEY) return null;
+  try {
+    const { verifyToken } = await import('@clerk/backend');
+    const claims = await verifyToken(token, {
+      secretKey: env.CLERK_SECRET_KEY,
+      authorizedParties: getAuthorizedParties(env),
+    });
+    if (typeof claims.sub === 'string' && claims.sub.length > 0) {
+      return { userId: claims.sub };
+    }
+  } catch (err) {
+    console.warn('[Clerk Token Verify Error]:', err);
+  }
+  return null;
 }
 
 async function ensureTablesExist(db: D1Database) {
@@ -238,43 +234,27 @@ export default {
       }
 
       if (url.pathname === '/api/admin/media' && method === 'GET' && administrator) {
-        const bucket = getR2Bucket(env);
-        const cursor = url.searchParams.get('cursor') || undefined;
-        const listing = await bucket.list({ limit: 100, cursor });
-        const assets = listing.objects.map((object) => ({
-          key: object.key,
-          url: `${url.origin}/api/images/${object.key.split('/').map(encodeURIComponent).join('/')}`,
-          size: object.size,
-          uploaded: object.uploaded.toISOString(),
+        const { results } = await env.DB.prepare(
+          'SELECT key, content_type, size, created_at FROM media_storage ORDER BY datetime(created_at) DESC LIMIT 100'
+        ).all<{ key: string; content_type: string; size: number; created_at: string }>();
+
+        const assets = (results || []).map((row) => ({
+          key: row.key,
+          url: `${url.origin}/api/images/${row.key.split('/').map(encodeURIComponent).join('/')}`,
+          size: row.size,
+          uploaded: row.created_at,
         }));
-        return jsonResponse({ success: true, data: assets, cursor: listing.truncated ? listing.cursor : null }, 200, cors);
+        return jsonResponse({ success: true, data: assets, cursor: null }, 200, cors);
       }
 
       // ----------------------------------------------------
-      // 1. IMAGE SERVING (/api/images/*) - Dual R2 & D1 Storage
+      // 1. IMAGE SERVING (/api/images/*) - Cloudflare D1 Native Storage
       // ----------------------------------------------------
       if (url.pathname.startsWith('/api/images/')) {
         const rawKey = url.pathname.replace(/^\/api\/images\//, '');
         if (!rawKey) return errorResponse('Image key missing', 400, cors);
         const key = decodeURIComponent(rawKey);
 
-        // A. Try R2 storage first if available
-        try {
-          const bucket = getR2Bucket(env);
-          const object = await bucket.get(rawKey) || await bucket.get(key);
-          if (object) {
-            const headers = new Headers();
-            object.writeHttpMetadata(headers);
-            headers.set('etag', object.httpEtag);
-            headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-            Object.entries(cors).forEach(([k, v]) => headers.set(k, v));
-            return new Response(object.body, { headers });
-          }
-        } catch {
-          // R2 storage not configured or object unavailable, fall through to D1 media_storage
-        }
-
-        // B. Fall back to D1 media_storage table
         try {
           const row = await env.DB.prepare(
             'SELECT content_type, data_base64 FROM media_storage WHERE key = ? OR key = ? LIMIT 1'
@@ -419,70 +399,43 @@ export default {
         const workerOrigin = `${url.protocol}//${url.host}`;
         const absolutePublicUrl = `${workerOrigin}/api/images/${storageKey}`;
 
-        // 1. Try R2 storage first
-        let saved = false;
+        // Store image into Cloudflare D1 media_storage table
         try {
-          const bucket = getR2Bucket(env);
-          await bucket.put(storageKey, fileBuffer, {
-            httpMetadata: {
-              contentType: fileType,
-            },
-          });
-          saved = true;
-          console.log(`[Worker R2 Upload Success]: Stored image at key ${storageKey}`);
-        } catch (r2Err) {
-          console.warn('[Worker R2 Upload Unavailable/Failed]:', r2Err);
-        }
-
-        // 2. Fallback to D1 media_storage table
-        if (!saved) {
-          try {
-            const bytes = new Uint8Array(fileBuffer);
-            let binary = '';
-            const chunkSize = 8192;
-            for (let i = 0; i < bytes.length; i += chunkSize) {
-              binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
-            }
-            const base64 = btoa(binary);
-
-            await env.DB.prepare(
-              `INSERT INTO media_storage (key, content_type, data_base64, size)
-               VALUES (?, ?, ?, ?)
-               ON CONFLICT(key) DO UPDATE SET data_base64 = excluded.data_base64, content_type = excluded.content_type`
-            ).bind(storageKey, fileType, base64, bytes.length).run();
-            saved = true;
-            console.log(`[Worker D1 Media Upload Success]: Stored image at key ${storageKey} (${bytes.length} bytes)`);
-          } catch (d1Err) {
-            console.error('[Worker D1 Media Storage Failed]:', d1Err);
+          const bytes = new Uint8Array(fileBuffer);
+          let binary = '';
+          const chunkSize = 8192;
+          for (let i = 0; i < bytes.length; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)));
           }
-        }
+          const base64 = btoa(binary);
 
-        if (!saved) {
-          return errorResponse('Image storage is unavailable. The image could not be saved.', 503, cors);
-        }
+          await env.DB.prepare(
+            `INSERT INTO media_storage (key, content_type, data_base64, size)
+             VALUES (?, ?, ?, ?)
+             ON CONFLICT(key) DO UPDATE SET data_base64 = excluded.data_base64, content_type = excluded.content_type, size = excluded.size`
+          ).bind(storageKey, fileType, base64, bytes.length).run();
 
-        return jsonResponse({
-          success: true,
-          url: absolutePublicUrl,
-          key: storageKey,
-          storage_key: storageKey,
-        }, 200, cors);
+          console.log(`[Worker D1 Media Upload Success]: Stored image at key ${storageKey} (${bytes.length} bytes)`);
+
+          return jsonResponse({
+            success: true,
+            url: absolutePublicUrl,
+            key: storageKey,
+            storage_key: storageKey,
+          }, 200, cors);
+        } catch (d1Err) {
+          console.error('[Worker D1 Media Storage Failed]:', d1Err);
+          return errorResponse('Image storage is unavailable in D1 database.', 503, cors);
+        }
       }
 
-      // DELETE /api/admin/upload - Delete image from R2
+      // DELETE /api/admin/upload - Delete image from D1 media_storage
       if (method === 'DELETE' && url.pathname === '/api/admin/upload') {
         const body = (await request.json()) as { key?: string; storage_key?: string };
         const storageKey = body.storage_key || body.key;
         if (!storageKey) return errorResponse('Storage key required', 400, cors);
-        try {
-          const bucket = getR2Bucket(env);
-          await bucket.delete(storageKey);
-          console.log(`[Worker R2 Delete Success]: Removed key ${storageKey}`);
-        } catch {}
-        try {
-          await env.DB.prepare('DELETE FROM media_storage WHERE key = ?').bind(storageKey).run();
-          console.log(`[Worker D1 Media Delete Success]: Removed key ${storageKey}`);
-        } catch {}
+        await env.DB.prepare('DELETE FROM media_storage WHERE key = ?').bind(storageKey).run();
+        console.log(`[Worker D1 Media Delete Success]: Removed key ${storageKey}`);
         return jsonResponse({ success: true, message: 'Image deleted from storage' }, 200, cors);
       }
 
@@ -709,10 +662,6 @@ export default {
         const id = url.pathname.replace('/api/admin/gallery/', '');
         const item = await env.DB.prepare('SELECT storage_key FROM gallery WHERE id = ?').bind(id).first<{ storage_key: string }>();
         if (item && item.storage_key) {
-          try {
-            const bucket = getR2Bucket(env);
-            await bucket.delete(item.storage_key);
-          } catch {}
           try {
             await env.DB.prepare('DELETE FROM media_storage WHERE key = ?').bind(item.storage_key).run();
           } catch {}

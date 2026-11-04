@@ -18,8 +18,5 @@
       "database_id": "18eb960e-83e3-49e3-a59a-f8be6007d1b6",
       "migrations_dir": "./migrations"
     }
-  ],
-  "r2_buckets": [
-    { "binding": "MEDIA", "bucket_name": "orange-paramedical-media" }
   ]
 }
