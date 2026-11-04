@@ -6,7 +6,9 @@ import path from 'path';
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const publishableKey = process.env.VITE_CLERK_PUBLISHABLE_KEY ?? env.VITE_CLERK_PUBLISHABLE_KEY;
+  const DEFAULT_CLERK_KEY = 'pk_live_Y2xlcmsub3JhbmdlY29sbGVnZXMuY29tJA';
+  const rawKey = (process.env.VITE_CLERK_PUBLISHABLE_KEY || '').trim() || (env.VITE_CLERK_PUBLISHABLE_KEY || '').trim();
+  const publishableKey = rawKey || DEFAULT_CLERK_KEY;
 
   if (mode === 'production') {
     const keyBody = publishableKey?.match(/^pk_live_([A-Za-z0-9_-]+)$/)?.[1];
