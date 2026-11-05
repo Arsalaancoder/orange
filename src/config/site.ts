@@ -42,11 +42,11 @@ export const siteConfig: SiteConfig = {
     fullText: "H.No. 3-113/21/A, Chengicherla, Hyderabad, Telangana State - 500092"
   },
   contact: {
-    primaryPhone: "9346410605",
-    secondaryPhone: "9346684227",
-    phoneNote: "Primary admissions helpline selection pending final client confirmation",
-    whatsappNumber: null, // To be confirmed by client before launch
-    email: null // To be confirmed by client before launch
+    primaryPhone: "9346410606",
+    secondaryPhone: "9494352950",
+    phoneNote: "Official Admissions Helpline: 93464 10606 | 94943 52950",
+    whatsappNumber: "9346410606",
+    email: "info@orangecolleges.com"
   },
   socialLinks: {
     facebook: "https://facebook.com",

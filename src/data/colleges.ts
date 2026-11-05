@@ -162,7 +162,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Chengicherla+Hyderabad+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Orange College of Nursing | Orange Group",
     seoDescription: "Orange College of Nursing in Chengicherla, Hyderabad, sponsored by Srikar Educational Society (Reg No. 215/2025), offering B.Sc Nursing education in Telangana."
   },
@@ -176,7 +176,7 @@ export const collegesData: College[] = [
     type: "Nursing College",
     sponsor: "Telagana Xpress Educational Society",
     registrationNumber: "214/2025",
-    address: "H.No. 4-48/1, Nagaram, Hyderabad, Telangana State - 500083",
+    address: "Bandlaguda Cross Road, Mandal: Keesara, Nagaram, Hyderabad, Telangana State - 500083",
     locationGroup: "Nagaram / Hyderabad",
     district: "Medchal Dist",
     state: "Telangana State",
@@ -184,8 +184,8 @@ export const collegesData: College[] = [
     imageLabel: "Apple College of Nursing Campus",
     shortDescription: "Undergraduate nursing institution in Nagaram, Hyderabad, sponsored by Telagana Xpress Educational Society.",
     heroTagline: "Academic Depth & Applied Nursing Education in Nagaram, Hyderabad",
-    dropdownThumbnail: "/images/colleges/acn_building.jpg",
-    heroImage: "/images/colleges/acn_building.jpg",
+    dropdownThumbnail: "/images/colleges/apple_nursing_building.jpg",
+    heroImage: "/images/colleges/apple_nursing_building.jpg",
     aboutHeading: "From Scientific Understanding to Nursing Practice",
     aboutParagraphs: [
       "Apple College of Nursing provides academic instruction and visual demonstration training in Nagaram, Hyderabad, designed for degree-level nursing practice.",
@@ -250,9 +250,9 @@ export const collegesData: College[] = [
       { title: "Anatomy Practical Study", category: "Laboratories", imageUrl: "https://images.unsplash.com/photo-1576671081837-49000212a370?auto=format&fit=crop&w=800&q=80" },
       { title: "Clinical Skill Demonstration", category: "Clinical Training", imageUrl: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80" }
     ],
-    mapUrl: "https://maps.google.com/?q=Nagaram+Hyderabad+Telangana",
-    contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    mapUrl: "https://maps.google.com/?q=Bandlaguda+Cross+Road+Keesara+Nagaram+Hyderabad",
+    contactPhone: "93464 10606 | 94943 52950",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Apple College of Nursing | Orange Group",
     seoDescription: "Apple College of Nursing in Nagaram, Hyderabad, sponsored by Telagana Xpress Educational Society (Reg No. 214/2025)."
   },
@@ -342,7 +342,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Chengicherla+Hyderabad+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Orange School of Nursing | Orange Group",
     seoDescription: "Orange School of Nursing in Chengicherla, Hyderabad, sponsored by Srikar Educational Society (Reg No. 215/2025), providing GNM nursing training."
   },
@@ -356,7 +356,7 @@ export const collegesData: College[] = [
     type: "Nursing School",
     sponsor: "Telagana Xpress Educational Society",
     registrationNumber: "214/2025",
-    address: "H.No. 4-48/1, Nagaram, Hyderabad, Telangana State - 500083",
+    address: "Bandlaguda Cross Road, Mandal: Keesara, Nagaram, Hyderabad, Telangana State - 500083",
     locationGroup: "Nagaram / Hyderabad",
     district: "Medchal Dist",
     state: "Telangana State",
@@ -364,8 +364,8 @@ export const collegesData: College[] = [
     imageLabel: "Apple School of Nursing Campus",
     shortDescription: "GNM diploma nursing school located in Nagaram, Hyderabad under Telagana Xpress Educational Society.",
     heroTagline: "Practical GNM Diploma Training in Nagaram, Hyderabad",
-    dropdownThumbnail: "/images/colleges/asn_building.jpg",
-    heroImage: "/images/colleges/asn_building.jpg",
+    dropdownThumbnail: "/images/colleges/apple_nursing_building.jpg",
+    heroImage: "/images/colleges/apple_nursing_building.jpg",
     aboutHeading: "Building Confidence Through Practical Nursing Education",
     aboutParagraphs: [
       "Apple School of Nursing prepares GNM diploma trainees for healthcare environments through structured practical instruction and ward preparation training.",
@@ -430,9 +430,9 @@ export const collegesData: College[] = [
       { title: "Community Hygiene Camp", category: "Events", imageUrl: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80" },
       { title: "Smart Classroom Lecture", category: "Classrooms", imageUrl: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80" }
     ],
-    mapUrl: "https://maps.google.com/?q=Nagaram+Hyderabad+Telangana",
-    contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    mapUrl: "https://maps.google.com/?q=Bandlaguda+Cross+Road+Keesara+Nagaram+Hyderabad",
+    contactPhone: "93464 10606 | 94943 52950",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Apple School of Nursing | Orange Group",
     seoDescription: "Apple School of Nursing in Nagaram, Hyderabad, sponsored by Telagana Xpress Educational Society (Reg No. 214/2025)."
   },
@@ -522,7 +522,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Chengicherla+Hyderabad+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Sindoora School of Nursing | Orange Group",
     seoDescription: "Sindoora School of Nursing in Chengicherla, Hyderabad, sponsored by NS Foundation (Reg No. 520/2019)."
   },
@@ -612,7 +612,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Nalgonda+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Vennela School of Nursing | Orange Group",
     seoDescription: "Vennela School of Nursing in Nalgonda, sponsored by Siddhartha Educational Society."
   },
@@ -700,9 +700,9 @@ export const collegesData: College[] = [
       { title: "Medical Imaging Instruction", category: "Laboratories", imageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80" },
       { title: "Clinical Pathology Testing", category: "Laboratories", imageUrl: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80" }
     ],
-    mapUrl: "https://maps.google.com/?q=Nagaram+Hyderabad+Telangana",
-    contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    mapUrl: "https://maps.google.com/?q=Bandlaguda+Cross+Road+Keesara+Nagaram+Hyderabad",
+    contactPhone: "93464 10606 | 94943 52950",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Jawan Paramedical College | Orange Group",
     seoDescription: "Jawan Paramedical College in Nagaram, Hyderabad, sponsored by Telagana Xpress Educational Society (Reg No. 214/2025)."
   },
@@ -792,7 +792,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Nalgonda+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Siddhartha Paramedical Colleges | Orange Group",
     seoDescription: "Siddhartha Paramedical Colleges in Nalgonda, sponsored by Siddhartha Educational Society."
   }

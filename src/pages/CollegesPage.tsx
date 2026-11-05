@@ -375,6 +375,11 @@ export const CollegesPage: React.FC = () => {
               <p className="text-sm text-[#A0A5A8] leading-relaxed">
                 Contact our central admissions team for institution-specific guidance, eligibility criteria, and application details across all 8 colleges.
               </p>
+              <div className="flex flex-wrap items-center gap-4 text-xs font-mono pt-2 text-[#E3E6E5]">
+                <span>✉️ Official Email: <a href="mailto:info@orangecolleges.com" className="text-[#F26A21] hover:underline font-bold">info@orangecolleges.com</a></span>
+                <span className="hidden sm:inline text-white/30">•</span>
+                <span>📞 Helpline: <a href="tel:9346410606" className="text-white hover:text-[#F26A21] font-semibold">93464 10606</a> | <a href="tel:9494352950" className="text-white hover:text-[#F26A21] font-semibold">94943 52950</a></span>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-4 shrink-0">

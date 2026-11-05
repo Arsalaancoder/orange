@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import type { College } from '@/data/colleges';
-import { ArrowRight, MapPin, Building2, ShieldCheck, GraduationCap, Stethoscope } from 'lucide-react';
+import { ArrowRight, MapPin, Building2, ShieldCheck, GraduationCap, Stethoscope, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cardSoftPopVariant } from '@/components/animations/motionVariants';
 
@@ -74,6 +74,18 @@ export const CollegeCard: React.FC<CollegeCardProps> = ({ college, className = '
               <ShieldCheck className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
               <span className="truncate">{college.sponsor}</span>
             </div>
+            {college.contactEmail && (
+              <div className="flex items-center gap-1.5 text-xs text-[#667085]">
+                <Mail className="w-3.5 h-3.5 text-[#F26A21] shrink-0" />
+                <a
+                  href={`mailto:${college.contactEmail}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="hover:text-[#F26A21] hover:underline font-mono text-[11px] truncate text-[#485056]"
+                >
+                  {college.contactEmail}
+                </a>
+              </div>
+            )}
           </div>
 
           <p className="text-xs sm:text-sm text-[#485056] leading-relaxed line-clamp-2 font-sans">

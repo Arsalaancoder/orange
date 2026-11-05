@@ -117,7 +117,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Medipally+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Orange College of Nursing | Orange Group",
     seoDescription: "Orange College of Nursing in Medipally, sponsored by Srikar Educational Society (Reg No. 215/2025), offering nursing education in Telangana."
   },
@@ -172,7 +172,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Nagaram+Keesara+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Apple College of Nursing | Orange Group",
     seoDescription: "Apple College of Nursing in Nagaram, Keesara, sponsored by Telagana Xpress Educational Society (Reg No. 214/2025)."
   },
@@ -227,7 +227,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Medipally+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Orange School of Nursing | Orange Group",
     seoDescription: "Orange School of Nursing in Medipally, sponsored by Srikar Educational Society (Reg No. 215/2025), providing GNM nursing training."
   },
@@ -282,7 +282,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Nagaram+Keesara+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Apple School of Nursing | Orange Group",
     seoDescription: "Apple School of Nursing in Nagaram, Keesara, sponsored by Telagana Xpress Educational Society (Reg No. 214/2025)."
   },
@@ -337,7 +337,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Medipally+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Sindoora School of Nursing | Orange Group",
     seoDescription: "Sindoora School of Nursing in Chenagacherla, Medipally, sponsored by NS Foundation (Reg No. 520/2019)."
   },
@@ -392,7 +392,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Nalgonda+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Vennela School of Nursing | Orange Group",
     seoDescription: "Vennela School of Nursing in Nalgonda, sponsored by Siddhartha Educational Society."
   },
@@ -447,7 +447,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Nagaram+Keesara+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Jawan Paramedical College | Orange Group",
     seoDescription: "Jawan Paramedical College in Nagaram, Keesara, sponsored by Telagana Xpress Educational Society (Reg No. 214/2025)."
   },
@@ -502,7 +502,7 @@ export const collegesData: College[] = [
     ],
     mapUrl: "https://maps.google.com/?q=Nalgonda+Telangana",
     contactPhone: "+91 9346410605",
-    contactEmail: "admissions@orangegroup.edu.in",
+    contactEmail: "info@orangecolleges.com",
     seoTitle: "Siddhartha Paramedical Colleges | Orange Group",
     seoDescription: "Siddhartha Paramedical Colleges in Nalgonda, sponsored by Siddhartha Educational Society."
   }

@@ -784,13 +784,35 @@ export const CollegeDetailPage: React.FC = () => {
                 {college.contactPhone && (
                   <div className="flex items-center gap-2.5">
                     <Phone className="w-4 h-4 shrink-0 text-[#F26A21]" />
-                    <span><strong>Admissions Helpline:</strong> {college.contactPhone}</span>
+                    <span>
+                      <strong>Admissions Helpline:</strong>{' '}
+                      {college.contactPhone.includes('|') ? (
+                        <>
+                          <a href={`tel:${college.contactPhone.split('|')[0].trim().replace(/[^0-9+]/g, '')}`} className="text-[#202426] hover:text-[#F26A21] font-medium">
+                            {college.contactPhone.split('|')[0].trim()}
+                          </a>
+                          {' | '}
+                          <a href={`tel:${college.contactPhone.split('|')[1].trim().replace(/[^0-9+]/g, '')}`} className="text-[#202426] hover:text-[#F26A21] font-medium">
+                            {college.contactPhone.split('|')[1].trim()}
+                          </a>
+                        </>
+                      ) : (
+                        <a href={`tel:${college.contactPhone.replace(/[^0-9+]/g, '')}`} className="text-[#202426] hover:text-[#F26A21] font-medium">
+                          {college.contactPhone}
+                        </a>
+                      )}
+                    </span>
                   </div>
                 )}
                 {college.contactEmail && (
                   <div className="flex items-center gap-2.5">
                     <Mail className="w-4 h-4 shrink-0 text-[#F26A21]" />
-                    <span><strong>Official Email:</strong> {college.contactEmail}</span>
+                    <span>
+                      <strong>Official Email:</strong>{' '}
+                      <a href={`mailto:${college.contactEmail}`} className="text-[#F26A21] hover:underline font-semibold font-mono text-xs sm:text-sm">
+                        {college.contactEmail}
+                      </a>
+                    </span>
                   </div>
                 )}
               </div>

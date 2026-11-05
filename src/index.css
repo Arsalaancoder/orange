@@ -197,7 +197,7 @@
 }
 
 .marquee-track {
-  animation: marquee-scroll 32s linear infinite;
+  animation: marquee-scroll 45s linear infinite;
 }
 
 /* Pause the ticker when the user hovers anywhere inside the bar */

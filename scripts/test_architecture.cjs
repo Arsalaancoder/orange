@@ -68,3 +68,4 @@ for (const f of filesToCheck) {
 console.log('✓ Zero production secrets committed in tracked configuration files');
 
 console.log('--- ALL TEST SUITE ASSERTIONS PASSED SUCCESSFULLY ---');
+

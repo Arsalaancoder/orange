@@ -88,7 +88,7 @@ export const footerNavigation = {
   ],
   locations: [
     { name: "Chengicherla / Hyderabad Campus", address: "Chengicherla, Hyderabad, Telangana State - 500092" },
-    { name: "Nagaram / Hyderabad Campus", address: "Nagaram, Hyderabad, Telangana State - 500083" },
+    { name: "Nagaram / Hyderabad Campus", address: "Bandlaguda Cross Road, Mandal: Keesara, Nagaram, Hyderabad - 500083" },
     { name: "Nalgonda Campus", address: "Hyderabad Road, Nalgonda, Telangana" }
   ]
 };
