@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAdminAuth } from '@/auth/adminAuth';
 import { api, resolveImageUrl } from '@/services/api';
 import type { GalleryItem } from '@/services/api';
@@ -190,9 +190,9 @@ export const AdminGalleryPage: React.FC = () => {
           display_order: galleryList.length + i + 1,
         }, token || undefined);
 
-        // Immediately inject the item into the gallery list using the local preview URL
-        // so the image is visible right away without waiting for a remote fetch.
-        const displayItem = { ...savedItem, image_url: item.previewUrl || uploadRes.url };
+        // Immediately inject the item into the gallery list using the permanent remote URL
+        const displayUrl = savedItem.image_url || uploadRes.url || item.previewUrl;
+        const displayItem = { ...savedItem, image_url: displayUrl };
         setGalleryList((prev) => [displayItem, ...prev.filter((g) => g.id !== savedItem.id)]);
 
         if (uploadRes.url.startsWith('data:')) {

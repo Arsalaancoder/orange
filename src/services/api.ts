@@ -123,8 +123,10 @@ function getLocalItems<T>(key: string): T[] {
   }
 }
 
-function saveLocalItem<T extends { id?: string }>(key: string, item: T): void {
+function saveLocalItem<T extends { id?: string; image_url?: string }>(key: string, item: T): void {
   try {
+    // Never persist ephemeral session-only blob URLs to localStorage
+    if (item.image_url && item.image_url.startsWith('blob:')) return;
     const existing = getLocalItems<T>(key);
     const updated = [item, ...existing.filter((e) => e.id !== item.id)];
     localStorage.setItem(key, JSON.stringify(updated));
@@ -425,17 +427,14 @@ export const api = {
     } catch (err) {
       console.warn('[API Public Gallery Error]:', err);
     }
-    const local = getLocalItems<GalleryItem>('orange_local_gallery');
-    const filteredLocal = category === 'all' ? local : local.filter((g) => g.category === category);
-    // Prefer local entry when remote has an empty/invalid image URL
-    return [
-      ...filteredLocal,
-      ...remote.filter((r) => {
-        const localMatch = local.find((l) => l.id === r.id);
-        if (!localMatch) return true;
-        return !localMatch.image_url;
-      }),
-    ];
+
+    if (remote.length > 0) {
+      return remote;
+    }
+
+    const local = getLocalItems<GalleryItem>('orange_local_gallery')
+      .filter((item) => item.image_url && !item.image_url.startsWith('blob:'));
+    return category === 'all' ? local : local.filter((g) => g.category === category);
   },
 
   async getAdminGallery(token?: string): Promise<GalleryItem[]> {
@@ -446,18 +445,14 @@ export const api = {
     } catch (err) {
       console.warn('[API Admin Gallery Warning]:', err);
     }
-    const local = getLocalItems<GalleryItem>('orange_local_gallery');
-    // Prefer local entry when remote has an empty/invalid image URL
-    const merged = [
-      ...local,
-      ...remote.filter((r) => {
-        const localMatch = local.find((l) => l.id === r.id);
-        if (!localMatch) return true; // remote-only item, include it
-        // If local has a valid image URL, skip the remote version to preserve it
-        return !localMatch.image_url;
-      }),
-    ];
-    return merged;
+
+    if (remote.length > 0) {
+      return remote;
+    }
+
+    const local = getLocalItems<GalleryItem>('orange_local_gallery')
+      .filter((item) => item.image_url && !item.image_url.startsWith('blob:'));
+    return local;
   },
 
   async uploadImage(file: File, folder: string, token?: string): Promise<{ url: string; key: string; storage_key: string }> {

@@ -2,15 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 /**
- * Three identical copies of the ticker content ensure a seamless infinite loop.
- * The CSS animation shifts the track by -33.333% (one copy width), then
- * loops — creating the illusion of infinite horizontal scroll.
- * aria-hidden="true" on copies 2 & 3 so screen readers see the message once.
+ * Two identical tracks with transform: translateX(-100%) ensure that 100% of
+ * all text is fully displayed and continuously scrolled across the screen in
+ * an infinitely seamless loop without any cutoff or premature reset.
  */
 const TickerContent: React.FC<{ hidden?: boolean }> = ({ hidden }) => (
-  <span
-    className="inline-flex items-center text-[#202426] text-[12px] sm:text-[13px] font-medium tracking-wide shrink-0"
-    style={{ paddingRight: '5rem' }}
+  <div
+    className="inline-flex items-center text-[#202426] text-[12px] sm:text-[13px] font-medium tracking-wide shrink-0 pr-12"
     aria-hidden={hidden || undefined}
   >
     {/* Admissions Open Pill Badge */}
@@ -18,7 +16,7 @@ const TickerContent: React.FC<{ hidden?: boolean }> = ({ hidden }) => (
       <span>🎓 Admissions Open 2026–27</span>
     </span>
 
-    {/* Apple Nursing Colleges from Image */}
+    {/* Apple Nursing Institutions from Image */}
     <span className="font-bold text-[#8B3A0F] font-serif-heading text-[13.5px] sm:text-[14.5px] tracking-wide mr-2">
       APPLE B.Sc NURSING &amp; APPLE SCHOOL OF NURSING
     </span>
@@ -54,20 +52,6 @@ const TickerContent: React.FC<{ hidden?: boolean }> = ({ hidden }) => (
 
     <span className="text-[#F26A21] mx-2 font-bold">&bull;</span>
 
-    {/* Official Email */}
-    <span className="inline-flex items-center gap-1.5 mr-3">
-      <span className="text-[#8B3A0F] font-semibold">✉️ Official Email:</span>
-      <a
-        href="mailto:info@orangecolleges.com"
-        className="font-bold text-[#C4520E] hover:text-[#101820] hover:underline underline-offset-2 transition-colors font-mono text-[11.5px] sm:text-[12.5px]"
-        tabIndex={hidden ? -1 : undefined}
-      >
-        info@orangecolleges.com
-      </a>
-    </span>
-
-    <span className="text-[#F26A21] mx-2 font-bold">&bull;</span>
-
     {/* Programs */}
     <span className="text-[#485056] font-medium mr-3">
       B.Sc Nursing &bull; GNM &bull; DMLT &bull; Paramedical Programs
@@ -76,27 +60,24 @@ const TickerContent: React.FC<{ hidden?: boolean }> = ({ hidden }) => (
     {/* Apply Now Button */}
     <Link
       to="/admissions"
-      className="inline-flex items-center gap-1.5 font-bold px-3 py-1 rounded-full bg-[#C4520E] hover:bg-[#8B3A0F] text-white text-[11px] shadow-xs hover:shadow transition-all duration-200 uppercase tracking-wider shrink-0"
+      className="inline-flex items-center gap-1.5 font-bold px-3 py-0.5 rounded-full bg-[#C4520E] hover:bg-[#8B3A0F] text-white text-[11px] shadow-xs hover:shadow transition-all duration-200 uppercase tracking-wider shrink-0"
       aria-label={hidden ? undefined : 'Apply Now for Admissions 2026-27'}
       tabIndex={hidden ? -1 : undefined}
     >
       <span>Apply Now</span>
       <span>&rarr;</span>
     </Link>
-  </span>
+  </div>
 );
 
 export const AdmissionsTicker: React.FC = () => {
   return (
     <div
-      className="admissions-ticker w-full"
+      className="admissions-ticker w-full overflow-hidden flex relative"
       style={{
         background: 'linear-gradient(90deg, #FEF0E6 0%, #FDE8D4 50%, #FEF0E6 100%)',
         borderBottom: '1px solid #F9C9A3',
-        height: '42px',
-        overflowX: 'clip',
-        overflowY: 'hidden',
-        position: 'relative',
+        height: '40px',
       }}
       role="marquee"
       aria-label="Admissions announcement ticker"
@@ -104,31 +85,18 @@ export const AdmissionsTicker: React.FC = () => {
       {/* Soft gradient fade on left & right edges */}
       <div
         aria-hidden="true"
+        className="absolute inset-0 z-10 pointer-events-none"
         style={{
-          position: 'absolute',
-          inset: 0,
-          zIndex: 2,
-          pointerEvents: 'none',
           background:
-            'linear-gradient(to right, #FEF0E6 0%, transparent 4%, transparent 96%, #FDE8D4 100%)',
+            'linear-gradient(to right, #FEF0E6 0%, transparent 3%, transparent 97%, #FDE8D4 100%)',
         }}
       />
 
-      {/* Scrolling track */}
-      <div
-        className="marquee-track"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          whiteSpace: 'nowrap',
-          willChange: 'transform',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
+      {/* Two identical scrolling tracks that move continuously from 0% to -100% */}
+      <div className="marquee-track flex shrink-0 items-center h-full">
         <TickerContent />
-        <TickerContent hidden />
+      </div>
+      <div className="marquee-track flex shrink-0 items-center h-full" aria-hidden="true">
         <TickerContent hidden />
       </div>
     </div>

@@ -192,12 +192,17 @@
 
 /* ─── Admissions Ticker / Marquee ────────────────────────────────────────── */
 @keyframes marquee-scroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-33.3333%); }
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
 }
 
 .marquee-track {
-  animation: marquee-scroll 45s linear infinite;
+  animation: marquee-scroll 32s linear infinite;
+  will-change: transform;
 }
 
 /* Pause the ticker when the user hovers anywhere inside the bar */
